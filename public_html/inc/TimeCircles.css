@@ -1,0 +1,70 @@
+/*
+    A few CSS properties are set by the javascript
+    This is in order to allow us to set the size of
+    the text relative to the size of the circles
+    and the element they inhabit.
+    
+    Time circles was fully programmed and designed
+    by Wim Barelds
+    
+    So long as you do not remove this message, you
+    are free to use this on your website. However
+    please do not redistribute without being given
+    direct permission from the author
+    
+    Contact me at: Wim.Barelds@GMail.com
+    Version: 1.0, 2013/07/25
+    
+    Todo:
+        jQuery plugin
+            [html property] data-ref-date="yyyy/mm/dd hh:mm:ss"
+            [function] start
+            [function] stop
+            [function] destroy
+        Option:
+            Days: { Show: true, text: "Days" }
+            Use of absolute time instead of ref-date
+*/
+
+/**
+ *	This element is created inside your target element
+ *	It is used so that your own element will not need to be altered
+ **/
+.time_circles {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+/**
+ *	This is all the elements used to house all text used
+ * in time circles
+ **/
+.time_circles > div {
+    position: absolute;
+    text-align: center;
+}
+
+/**
+ *	Titles (Days, Hours, etc)
+ **/
+.time_circles > div > h4 {
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+    text-transform: uppercase;
+    font-family: 'Century Gothic';
+}
+
+/**
+ *	Time numbers, ie: 12
+ **/
+.time_circles > div > span {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-family: 'Century Gothic';
+    font-size: 300%;
+    margin-top: 0.4em;
+    font-weight: bold;
+}

@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <script type="text/javascript" src="inc/TimeCircles.js"></script>
+        <link rel="stylesheet" href="inc/TimeCircles.css" />
+    </head>
+    <body>
+
+        <div class="someTimer" data-date="2013-04-07 00:00:00" style="width: 500px; height: 125px; padding: 0px; box-sizing: border-box; background-color: #E0E8EF"></div>
+        <div class="someTimer" data-timer="50000" style="width: 1000px; height: 250px;"></div>
+        <div class="someTimer" style="width: 500px; height: 125px;"></div>
+        
+        <script>
+            var timeCircles = $(".someTimer").TimeCircles({fg_width: 0.1, bg_width: 0.2});
+            //TimeCircles("Version3", new Date('2013-11-03 00:00:00'));
+            //var timeCircles = $("#Version3").TimeCircles({ ref_date: new Date('2013-01-01 00:00:00') });
+        </script>
+    </body>
+</html>
