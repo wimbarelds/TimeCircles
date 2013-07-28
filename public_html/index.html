@@ -2,19 +2,50 @@
 <html>
     <head>
         <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+        <link href="http://netdna.bootstrapcdn.com/bootstrap/3.0.0-rc1/css/bootstrap.min.css" rel="stylesheet">
         <script type="text/javascript" src="inc/TimeCircles.js"></script>
         <link rel="stylesheet" href="inc/TimeCircles.css" />
     </head>
     <body>
-
-        <div class="someTimer" data-date="2013-04-07 00:00:00" style="width: 500px; height: 125px; padding: 0px; box-sizing: border-box; background-color: #E0E8EF"></div>
-        <div class="someTimer" data-timer="50000" style="width: 1000px; height: 250px;"></div>
-        <div class="someTimer" style="width: 500px; height: 125px;"></div>
-        
+        <div class="container">
+            <h1>TimeCircle examples</h1>
+            <h2>Time until 2014</h2>
+            <div class="someTimer" data-date="2014-01-01 00:00:00" style="width: 500px; height: 125px; padding: 0px; box-sizing: border-box; background-color: #E0E8EF"></div>
+            <hr>
+            <h2>Counting down 15 minutes (900 seconds)</h2>
+            <div class="someTimer" data-timer="900" style="width: 1000px; height: 250px;"></div>
+            <button class="btn btn-success startTimer">Start Timer</button>
+            <button class="btn btn-danger stopTimer">Stop Timer</button>
+            <hr>
+            <h2>Time since page was opened</h2>
+            <div>
+                <div style="float: left; width: 100px;">
+                    <br>
+                    <button class="btn btn-success btn-block fadeIn">Fade in</button><br>
+                    <button class="btn btn-danger btn-block fadeOut">Fade out</button>
+                </div>
+                <div class="someTimer" style="width: 500px; height: 125px; float: left"></div>
+            </div>
+        </div>
         <script>
-            var timeCircles = $(".someTimer").TimeCircles({fg_width: 0.1, bg_width: 0.2});
-            //TimeCircles("Version3", new Date('2013-11-03 00:00:00'));
-            //var timeCircles = $("#Version3").TimeCircles({ ref_date: new Date('2013-01-01 00:00:00') });
-        </script>
+            var timeCircles = $(".someTimer").TimeCircles();
+
+            // Fade in and fade out are examples of how chaining can be done with TimeCircles
+            $(".fadeIn").click(function() {
+                timeCircles.elements.last().fadeIn();
+            });
+            $(".fadeOut").click(function() {
+                timeCircles.elements.last().fadeOut();
+            });
+
+            // Start and stop are methods applied on the public TimeCircles instance
+            $(".startTimer").click(function() {
+                $(".someTimer").eq(1).TimeCircles().start();
+            });
+            $(".stopTimer").click(function() {
+                $(".someTimer").eq(1).TimeCircles().stop();
+            });
+
+        </script>       
     </body>
 </html>
