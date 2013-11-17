@@ -1,31 +1,3 @@
-/*
-    A few CSS properties are set by the javascript
-    This is in order to allow us to set the size of
-    the text relative to the size of the circles
-    and the element they inhabit.
-    
-    Time circles was fully programmed and designed
-    by Wim Barelds
-    
-    So long as you do not remove this message, you
-    are free to use this on your website. However
-    please do not redistribute without being given
-    direct permission from the author
-    
-    Contact me at: Wim.Barelds@GMail.com
-    Version: 1.0, 2013/07/25
-    
-    Todo:
-        jQuery plugin
-            [html property] data-ref-date="yyyy/mm/dd hh:mm:ss"
-            [function] start
-            [function] stop
-            [function] destroy
-        Option:
-            Days: { Show: true, text: "Days" }
-            Use of absolute time instead of ref-date
-*/
-
 /**
  *	This element is created inside your target element
  *	It is used so that your own element will not need to be altered
