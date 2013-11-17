@@ -1,0 +1,55 @@
+.example {
+    width: 400px;
+    height: 100px;
+    margin-bottom: 10px;
+}
+small.codeType {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-weight: bold;
+    color: #900;
+}
+h2,h3 {
+    margin-top: 1.5em;
+}
+
+pre {
+    position: relative;
+}
+.code {
+    position: relative;
+    font-family: Monaco,Menlo,Consolas,"Courier New",monospace;
+    font-size: 13px;
+    line-height: 1.428571429;
+    color: #000;
+    white-space: pre-line;
+}
+
+.nav li {
+    list-style: none;
+}
+.nav li a {
+    color: #60686F;
+    display: block;
+}
+.nav li a:hover {
+    text-decoration: none;
+    background-color: rgb(238, 238, 238);
+}
+.nav li.active > a {
+    border-right: solid #C0C8CF 2px;
+    font-weight: bold;
+}
+
+
+.nav li.active {
+}
+
+.nav li ul {
+    display: none;
+}
+
+.nav li.active ul {
+    display: block;
+}

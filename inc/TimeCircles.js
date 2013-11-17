@@ -54,18 +54,11 @@
             s4() + '-' + s4() + s4() + s4();
     }
     
-    /**
-     * Clones an object so that each instance of TC_Instance can access their own private options
-     * @param {object} obj
-     */
-    function clone(obj) {
-        return JSON.parse(JSON.stringify(obj));
-    }
-    
     var TC_Instance_List = {};
 
     var TC_Instance = function(element, options) {
         this.element = element;
+        this.container;
         this.timer = null;
         this.data = {
             text_elements: {
@@ -91,21 +84,27 @@
                 }
             }
         };
+        this.listeners = [];
         this.config = null;
         this.setOptions(options);
-    
-        var container = document.createElement('div');
-        container.classList.add('time_circles');
-        element.appendChild(container);
+        
+        this.container = $("<div>");
+        this.container.addClass('time_circles');
+        this.container.appendTo(this.element);
 
-        this.data.attributes.canvas = document.createElement('canvas');
-        this.data.attributes.context = this.data.attributes.canvas.getContext('2d');
+        this.data.attributes.canvas = $("<canvas>");
+        this.data.attributes.context = this.data.attributes.canvas[0].getContext('2d');
+        
+        var height = this.element.offsetHeight;
+        var width = this.element.offsetWidth;
+        if(height === 0 && width > 0) height = width / 4;
+        else if(width === 0 && height > 0) width = height * 4;
+        
+        this.data.attributes.canvas[0].height = height;
+        this.data.attributes.canvas[0].width = width;
+        this.data.attributes.canvas.appendTo(this.container);
 
-        this.data.attributes.canvas.height = container.offsetHeight;
-        this.data.attributes.canvas.width = container.offsetWidth;
-        container.appendChild(this.data.attributes.canvas);
-
-        this.data.attributes.item_size = Math.min(this.data.attributes.canvas.width / 4, this.data.attributes.canvas.height);
+        this.data.attributes.item_size = Math.min(this.data.attributes.canvas[0].width / 4, this.data.attributes.canvas[0].height);
         this.data.attributes.line_width = this.data.attributes.item_size * this.config.fg_width;
         this.data.attributes.radius = ((this.data.attributes.item_size * 0.8) - this.data.attributes.line_width) / 2;
         this.data.attributes.outer_radius = this.data.attributes.radius + 0.5 * Math.max(this.data.attributes.line_width, this.data.attributes.line_width * this.config.bg_width);
@@ -113,24 +112,24 @@
         // Prepare Time Elements
         var i = 0;
         for (var key in this.data.text_elements) {
-            var headerElement = document.createElement('h4');
-            headerElement.innerText = this.config.time[key].text; // Options
-            headerElement.style.fontSize = Math.round(0.07 * this.data.attributes.item_size) + 'px';
-            headerElement.style.lineHeight = Math.round(0.07 * this.data.attributes.item_size) + 'px';
+            var textElement = $("<div>");
+            textElement.addClass('textDiv_' + key);
+            textElement.css("top", Math.round(0.35 * this.data.attributes.item_size));
+            textElement.css("left", Math.round(i++ * this.data.attributes.item_size));
+            textElement.css("width", this.data.attributes.item_size);
+            textElement.appendTo(this.container);
             
-            var numberElement = document.createElement('span');
-            numberElement.style.fontSize = Math.round(0.21 * this.data.attributes.item_size) + 'px';
-            numberElement.style.lineHeight = Math.round(0.07 * this.data.attributes.item_size) + 'px';
-
-            var textElement = document.createElement('div');
-            textElement.className = 'textDiv_' + key;
-            textElement.appendChild(headerElement);
-            textElement.appendChild(numberElement);
-            textElement.style.top = Math.round(0.35 * this.data.attributes.item_size) + 'px';
-            textElement.style.left = Math.round(i++ * this.data.attributes.item_size) + 'px';
-            textElement.style.width = this.data.attributes.item_size + 'px';
-            container.appendChild(textElement);
-
+            var headerElement = $("<h4>");
+            headerElement.text(this.config.time[key].text); // Options
+            headerElement.css("font-size", Math.round(0.07 * this.data.attributes.item_size));
+            headerElement.css("line-height", Math.round(0.07 * this.data.attributes.item_size) + "px");
+            headerElement.appendTo(textElement);
+            
+            var numberElement = $("<span>");
+            numberElement.css("font-size", Math.round(0.21 * this.data.attributes.item_size));
+            numberElement.css("line-height", Math.round(0.07 * this.data.attributes.item_size) + "px");
+            numberElement.appendTo(textElement);
+            
             this.data.text_elements[key] = numberElement;
         }
 
@@ -179,12 +178,15 @@
         var lastKey = null;
         for (var key in time) {
             // Set the text value
-            this.data.text_elements[key].textContent = Math.floor(time[key]);
+            this.data.text_elements[key].text(Math.floor(time[key]));
 
             var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
             var y = this.data.attributes.item_size / 2;
             var color = this.config.time[key].color;
 
+            if(Math.floor(time[key]) !== Math.floor(old_time[key])) {
+                this.notifyListeners(key, Math.floor(time[key]), Math.floor(diff));
+            }
             // TODO: Check options for fading == true
             if (lastKey !== null) {
                 if (Math.floor(time[lastKey]) > Math.floor(old_time[lastKey])) {
@@ -203,7 +205,7 @@
             i++;
         }
     };
-
+    
     TC_Instance.prototype.drawArc = function(x, y, color, pct) {
         var clear_radius = Math.max(this.data.attributes.outer_radius, this.data.attributes.item_size / 2);
         this.data.attributes.context.clearRect(
@@ -237,6 +239,7 @@
     };
 
     TC_Instance.prototype.radialFade = function(x, y, color, from, key) {
+        // TODO: Make fade_time option
         var rgb = hexToRgb(color);
         var _this = this; // We have a few inner scopes here that will need access to our instance
 
@@ -264,7 +267,7 @@
 
     TC_Instance.prototype.start = function() {
         // Check if a date was passed in html attribute, if not, fall back to config
-        var attr_data_date = $(this.element).attr('data-date');
+        var attr_data_date = $(this.element).data('date');
         if (typeof attr_data_date === "string") {
             if (attr_data_date.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{1,2}:[0-9]{2}:[0-9]{2}$/).length > 0) {
                 attr_data_date = attr_data_date.replace(' ', 'T');
@@ -296,9 +299,7 @@
 
         // Start running
         var _this = this;
-        this.timer = setInterval(function() {
-            _this.updateArc();
-        }, this.config.refresh_interval * 1000);
+        this.timer = setInterval(function() { _this.updateArc(); }, this.config.refresh_interval * 1000);
     };
 
     TC_Instance.prototype.stop = function() {
@@ -309,15 +310,31 @@
         clearInterval(this.timer);
     };
 
-    TC_Instance.prototype.setOptions = function(options) {
-        if(this.config === null) {
-            var default_config = clone(this.default_options);
-            default_config.ref_date = new Date();
-            this.config =  $.extend(true, default_config, options);       
-        }
-        this.config = $.extend(true, this.config, options);
+    TC_Instance.prototype.destroy = function() {
+        this.stop();
+        this.container.remove();
+        $(this.element).removeData('tc-id');
     };
 
+    TC_Instance.prototype.setOptions = function(options) {
+        if(this.config === null) {
+            this.default_options.ref_date = new Date();
+            this.config = $.extend(true, {}, this.default_options);
+        }
+        $.extend(true, this.config, options);
+    };
+    
+    TC_Instance.prototype.addListener = function(f) {
+        if(typeof f !== "function") return;
+        this.listeners.push(f);
+    };
+    
+    TC_Instance.prototype.notifyListeners = function(unit, value, total) {
+        for(var i = 0; i < this.listeners.length; i++) {
+            this.listeners[i](unit, value, total);
+        }
+    }
+    
     TC_Instance.prototype.default_options = {
         ref_date: new Date(),
         start: true,
@@ -362,13 +379,18 @@
         var _this = this;
         this.elements.each(function() {
             var instance;
-            var cur_id = $(this).attr("data-tc-id");
+            var cur_id = $(this).data("tc-id");
             if (typeof cur_id === "undefined") {
                 cur_id = guid();
-                $(this).attr("data-tc-id", cur_id);
+                $(this).data("tc-id", cur_id);
             }
             if (typeof TC_Instance_List[cur_id] === "undefined") {
-                instance = new TC_Instance(this, _this.options);
+                var element_options = $(this).data('options');
+                var options = _this.options;
+                if(typeof element_options === "object") {
+                    options = $.extend(true, {}, _this.options, element_options);
+                }
+                instance = new TC_Instance(this, options);
                 TC_Instance_List[cur_id] = instance;
             }
             else {
@@ -382,18 +404,39 @@
                 callback(instance);
             }
         });
+        return this;
     };
 
     TC_Class.prototype.start = function() {
         this.foreach(function(instance) {
             instance.start();
         });
+        return this;
     };
 
     TC_Class.prototype.stop = function() {
         this.foreach(function(instance) {
             instance.stop();
         });
+        return this;
+    };
+
+    TC_Class.prototype.addListener = function(f) {
+        this.foreach(function(instance) {
+            instance.addListener(f);
+        });
+        return this;
+    };
+    
+    TC_Class.prototype.destroy = function() {
+        this.foreach(function(instance) {
+            instance.destroy();
+        });
+        return this;
+    };
+
+    TC_Class.prototype.end = function() {
+        return this.elements;
     };
 
     $.fn.TimeCircles = function(options) {
