@@ -24,6 +24,15 @@
         }
         return '<small class="codeType">HTML</small>'.$s;
     }
+	
+	function isMobile() {
+		$str = strtolower($_SERVER["HTTP_USER_AGENT"]);
+		if(strpos($str, "mobile") !== false) return true;
+		if(strpos($str, "android") !== false) return true;
+		if(strpos($str, "iphone") !== false) return true;
+		return false;
+	}
+	
 ?><!DOCTYPE html>
 <html lang="en">
     <head>
@@ -53,8 +62,9 @@
     <body data-spy="scroll" data-target="#sideNav">
         <div class="container">
             <div class="row show-grid" style="padding-top: 70px;">
+				<?php if(!isMobile()) { ?>
                 <div class="col-lg-3">
-                    <div class="bs-sidebar affix" id="sideNav" style="width: 270px;">
+                    <div class="bs-sidebar affix" id="sideNav" style="width: 270px; z-index: 1000;">
                         <ul class="nav bs-sidenav" style="padding-top: 10px;padding-bottom: 10px;text-shadow: 0 1px 0 #fff;background-color: #f7f5fa;border-radius: 5px;">
                             <li><a href="#Documentation">TimeCircles documentation</a></li>
                             <li><a href="#GeneralUse">General use</a></li>
@@ -85,7 +95,8 @@
                         </ul>
                     </div>
                 </div>
-                <div class="col-lg-9">
+				<?php } ?>
+                <div class="col-lg-9" style="min-width: 450px;">
                     <h1 id="Documentation">TimeCircles documentation</h1>
                     <p>
                         TimeCircles is a jQuery plugin that provides a nice looking way to either count down towards a certain time, or to count up from a certain time.

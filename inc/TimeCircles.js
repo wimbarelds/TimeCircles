@@ -14,6 +14,28 @@
  * of the private classes within the relevant element collection
  **/
 (function($) {
+    
+    var debug = (location.hash === "#debug");
+    function debug_log(msg) {
+        if(debug) {
+            console.log(msg);
+        }
+    }
+    
+    var nextUnits = {
+        Seconds: "Minutes",
+        Minutes: "Hours",
+        Hours: "Days",
+        Days: "Years"
+    };
+    var secondsIn = {
+        Seconds: 1,
+        Minutes: 60,
+        Hours: 3600,
+        Days: 86400,
+        Years: 31536000
+    };
+    
     /**
      * Converts hex color code into object containing integer values for the r,g,b use
      * This function (hexToRgb) originates from:
@@ -61,6 +83,8 @@
         this.container;
         this.timer = null;
         this.data = {
+            drawn_units: [],
+            super_unit: null,
             text_elements: {
                 Days: null,
                 Hours: null,
@@ -97,14 +121,14 @@
         
         var height = this.element.offsetHeight;
         var width = this.element.offsetWidth;
-        if(height === 0 && width > 0) height = width / 4;
-        else if(width === 0 && height > 0) width = height * 4;
+        if(height === 0 && width > 0) height = width / this.data.drawn_units.length;
+        else if(width === 0 && height > 0) width = height * this.data.drawn_units.length;
         
         this.data.attributes.canvas[0].height = height;
         this.data.attributes.canvas[0].width = width;
         this.data.attributes.canvas.appendTo(this.container);
 
-        this.data.attributes.item_size = Math.min(this.data.attributes.canvas[0].width / 4, this.data.attributes.canvas[0].height);
+        this.data.attributes.item_size = Math.min(this.data.attributes.canvas[0].width / this.data.drawn_units.length, this.data.attributes.canvas[0].height);
         this.data.attributes.line_width = this.data.attributes.item_size * this.config.fg_width;
         this.data.attributes.radius = ((this.data.attributes.item_size * 0.8) - this.data.attributes.line_width) / 2;
         this.data.attributes.outer_radius = this.data.attributes.radius + 0.5 * Math.max(this.data.attributes.line_width, this.data.attributes.line_width * this.config.bg_width);
@@ -112,6 +136,8 @@
         // Prepare Time Elements
         var i = 0;
         for (var key in this.data.text_elements) {
+            if(!this.config.time[key].show) continue;
+            
             var textElement = $("<div>");
             textElement.addClass('textDiv_' + key);
             textElement.css("top", Math.round(0.35 * this.data.attributes.item_size));
@@ -153,30 +179,37 @@
             diff = Math.max(this.data.attributes.ref_date - curDate, 0) / 1000;
             old_diff = diff + (curDate > this.data.attributes.ref_date) ? 0 : interval;
         }
-
-        var time = {
-            Days: (diff / 60 / 60 / 24),
-            Hours: (diff / 60 / 60) % 24,
-            Minutes: (diff / 60) % 60,
-            Seconds: diff % 60
-        };
-        var pct = {
-            Days: time.Days / 365,
-            Hours: time.Hours / 24,
-            Minutes: time.Minutes / 60,
-            Seconds: time.Seconds / 60
-        };
-
-        var old_time = {
-            Days: (old_diff / 60 / 60 / 24),
-            Hours: (old_diff / 60 / 60) % 24,
-            Minutes: (old_diff / 60) % 60,
-            Seconds: old_diff % 60
-        };
-
+        
+        var time = {};
+        var pct = {};
+        var old_time = {};
+        var greater_unit = null;
+        
+        for(var i in this.data.drawn_units) {
+            var unit = this.data.drawn_units[i];
+            if(greater_unit === null) greater_unit = this.data.super_unit;
+            
+            var maxUnits = secondsIn[greater_unit] / secondsIn[unit];
+            var curUnits = (diff / secondsIn[unit]);
+            var oldUnits = (old_diff / secondsIn[unit]);
+            
+            if(unit !== "Days"){
+                curUnits = curUnits % maxUnits;
+                oldUnits = oldUnits % maxUnits;
+            }
+            
+            time[unit] = curUnits;
+            pct[unit] = curUnits / maxUnits;
+            old_time[unit] = oldUnits;
+            
+            greater_unit = unit;
+        }
+        
         var i = 0;
         var lastKey = null;
-        for (var key in time) {
+        for (var i in this.data.drawn_units) {
+            var key = this.data.drawn_units[i];
+            
             // Set the text value
             this.data.text_elements[key].text(Math.floor(time[key]));
 
@@ -187,7 +220,7 @@
             if(Math.floor(time[key]) !== Math.floor(old_time[key])) {
                 this.notifyListeners(key, Math.floor(time[key]), Math.floor(diff));
             }
-            // TODO: Check options for fading == true
+            // TODO: Add option for fading != false
             if (lastKey !== null) {
                 if (Math.floor(time[lastKey]) > Math.floor(old_time[lastKey])) {
                     this.radialFade(x, y, color, 1, key);
@@ -322,6 +355,15 @@
             this.config = $.extend(true, {}, this.default_options);
         }
         $.extend(true, this.config, options);
+        
+        this.data.super_unit = null;
+        this.data.drawn_units = [];
+        for(var unit in this.config.time) {
+            if(this.config.time[unit].show){
+                this.data.drawn_units.push(unit);
+                if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
+            }
+        }
     };
     
     TC_Instance.prototype.addListener = function(f) {
