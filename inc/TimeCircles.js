@@ -168,17 +168,29 @@
 
         var interval = (1000 * this.config.refresh_interval);
         var curDate = new Date();
+        
+        // If not counting past zero, and time < 0, then simply draw the zero point once, and call stop
+        if (!this.config.count_past_zero) {
+            if(curDate > this.data.attributes.ref_date) {
+            for (var i in this.data.drawn_units) {
+                var key = this.data.drawn_units[i];
 
+                // Set the text value
+                this.data.text_elements[key].text(Math.floor(time[key]));
+                var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+                var y = this.data.attributes.item_size / 2;
+                var color = this.config.time[key].color;
+                this.drawArc(x, y, color, 0);
+            }
+            this.stop();
+            return;
+            }
+        }
+        
         // Compare current time with reference
-        if (this.config.count_past_zero) {
-            var prevDate = curDate - interval;
-            diff = Math.abs(curDate - this.data.attributes.ref_date) / 1000;
-            old_diff = Math.abs(this.data.attributes.ref_date - prevDate) / 1000;
-        }
-        else {
-            diff = Math.max(this.data.attributes.ref_date - curDate, 0) / 1000;
-            old_diff = diff + (curDate > this.data.attributes.ref_date) ? 0 : interval;
-        }
+        var prevDate = curDate - interval;
+        diff = Math.abs(curDate - this.data.attributes.ref_date) / 1000;
+        old_diff = Math.abs(prevDate - this.data.attributes.ref_date) / 1000;
         
         var time = {};
         var pct = {};
@@ -306,6 +318,13 @@
                 attr_data_date = attr_data_date.replace(' ', 'T');
             }
             this.data.attributes.ref_date = Date.parse(attr_data_date);
+            
+            // Thanks to https://github.com/lorenzoluci for pointing this out and suggesting this fix
+            if(isNaN(this.data.attributes.ref_date)){
+                var newDate = attr_data_date.replace(/-/g, '/');
+                newDate = newDate.replace("T"," ");
+                this.data.attributes.ref_date = Date.parse(newDate);
+            }
         }
         else {
             var attr_data_timer = $(this.element).attr('data-timer');
