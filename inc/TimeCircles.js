@@ -121,6 +121,9 @@
         
         var height = this.element.offsetHeight;
         var width = this.element.offsetWidth;
+        if(height === 0) height = $(this.element).height();
+        if(width === 0) width = $(this.element).width();
+        
         if(height === 0 && width > 0) height = width / this.data.drawn_units.length;
         else if(width === 0 && height > 0) width = height * this.data.drawn_units.length;
         
@@ -467,6 +470,10 @@
         });
         return this;
     };
+    
+    TC_Class.prototype.all_instances = function() {
+        return TC_Instance_List;
+    }
 
     TC_Class.prototype.start = function() {
         this.foreach(function(instance) {
