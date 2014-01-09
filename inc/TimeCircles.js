@@ -76,6 +76,14 @@
             s4() + '-' + s4() + s4() + s4();
     }
     
+    function parse_date(str) {
+        var parts = str.split(" ");
+        var date = parts[0].split("-");
+        var time = parts[1].split(":");
+        var d = new Date(date[0], date[1] - 1, date[2], time[0], time[1], time[2]);
+        return d;
+    }
+    
     var TC_Instance_List = {};
 
     var TC_Instance = function(element, options) {
@@ -83,6 +91,7 @@
         this.container;
         this.timer = null;
         this.data = {
+            prev_time: null,
             drawn_units: [],
             super_unit: null,
             text_elements: {
@@ -169,8 +178,11 @@
     TC_Instance.prototype.updateArc = function() {
         var diff, old_diff;
 
-        var interval = (1000 * this.config.refresh_interval);
+        var prevDate = this.data.prev_time;
         var curDate = new Date();
+        this.data.prev_time = curDate;
+        
+        if(prevDate === null) prevDate = curDate;
         
         // If not counting past zero, and time < 0, then simply draw the zero point once, and call stop
         if (!this.config.count_past_zero) {
@@ -191,7 +203,6 @@
         }
         
         // Compare current time with reference
-        var prevDate = curDate - interval;
         diff = Math.abs(curDate - this.data.attributes.ref_date) / 1000;
         old_diff = Math.abs(prevDate - this.data.attributes.ref_date) / 1000;
         
@@ -317,17 +328,7 @@
         // Check if a date was passed in html attribute, if not, fall back to config
         var attr_data_date = $(this.element).data('date');
         if (typeof attr_data_date === "string") {
-            if (attr_data_date.match(/^[0-9]{4}-[0-9]{2}-[0-9]{2}\s[0-9]{1,2}:[0-9]{2}:[0-9]{2}$/).length > 0) {
-                attr_data_date = attr_data_date.replace(' ', 'T');
-            }
-            this.data.attributes.ref_date = Date.parse(attr_data_date);
-            
-            // Thanks to https://github.com/lorenzoluci for pointing this out and suggesting this fix
-            if(isNaN(this.data.attributes.ref_date)){
-                var newDate = attr_data_date.replace(/-/g, '/');
-                newDate = newDate.replace("T"," ");
-                this.data.attributes.ref_date = Date.parse(newDate);
-            }
+            this.data.attributes.ref_date = parse_date(attr_data_date);
         }
         else {
             var attr_data_timer = $(this.element).attr('data-timer');
