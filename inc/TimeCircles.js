@@ -185,7 +185,7 @@
     };
 
     TC_Instance.prototype.updateArc = function() {
-        var diff, old_diff;
+        var diff, diff_raw, old_diff, old_diff_raw;
 
         var prevDate = this.data.prev_time;
         var curDate = new Date();
@@ -212,8 +212,10 @@
         }
         
         // Compare current time with reference
-        diff = Math.abs(curDate - this.data.attributes.ref_date) / 1000;
-        old_diff = Math.abs(prevDate - this.data.attributes.ref_date) / 1000;
+        diff_raw = (curDate - this.data.attributes.ref_date) / 1000;
+        diff = Math.abs(diff_raw);
+        old_diff_raw = (prevDate - this.data.attributes.ref_date) / 1000;
+        old_diff = Math.abs(old_diff_raw);
         
         var time = {};
         var pct = {};
@@ -253,7 +255,7 @@
             var color = this.config.time[key].color;
 
             if(Math.floor(time[key]) !== Math.floor(old_time[key])) {
-                this.notifyListeners(key, Math.floor(time[key]), Math.floor(diff));
+                this.notifyListeners(key, Math.floor(time[key]), Math.floor(diff_raw));
             }
             // TODO: Add option for fading != false
             if (lastKey !== null) {
