@@ -212,9 +212,9 @@
         }
         
         // Compare current time with reference
-        diff_raw = (curDate - this.data.attributes.ref_date) / 1000;
+        diff_raw = (this.data.attributes.ref_date - curDate) / 1000;
         diff = Math.abs(diff_raw);
-        old_diff_raw = (prevDate - this.data.attributes.ref_date) / 1000;
+        old_diff_raw = (this.data.attributes.ref_date - prevDate) / 1000;
         old_diff = Math.abs(old_diff_raw);
         
         var time = {};
