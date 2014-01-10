@@ -400,14 +400,16 @@
         }
     };
     
-    TC_Instance.prototype.addListener = function(f) {
+    TC_Instance.prototype.addListener = function(f, _this) {
+        console.log(_this);
         if(typeof f !== "function") return;
-        this.listeners.push(f);
+        this.listeners.push( {func: f, scope: _this});
     };
     
     TC_Instance.prototype.notifyListeners = function(unit, value, total) {
         for(var i = 0; i < this.listeners.length; i++) {
-            this.listeners[i](unit, value, total);
+            var listener = this.listeners[i];
+            listener.func.apply(listener.scope, [unit, value, total]);
         }
     }
     
@@ -502,8 +504,9 @@
     };
 
     TC_Class.prototype.addListener = function(f) {
+        var _this = this;
         this.foreach(function(instance) {
-            instance.addListener(f);
+            instance.addListener(f, _this.elements);
         });
         return this;
     };
