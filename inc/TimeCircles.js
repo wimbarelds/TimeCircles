@@ -351,6 +351,11 @@
                 $(this.element).removeAttr('data-timer');
                 $(this.element).removeData('timer');
             }
+            else if(typeof attr_data_timer === "number") {
+                this.data.attributes.timer = attr_data_timer;
+                $(this.element).removeAttr('data-timer');
+                $(this.element).removeData('timer');
+            }
             else if (typeof this.config.timer === "string") {
                 this.data.attributes.timer = parseFloat(this.config.timer);
                 this.config.timer = null;
