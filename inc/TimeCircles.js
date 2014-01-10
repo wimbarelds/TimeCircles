@@ -343,9 +343,13 @@
         }
         else {
             var attr_data_timer = $(this.element).attr('data-timer');
+            if (typeof attr_data_timer === "undefined") {
+                attr_data_timer = $(this.element).data('timer');
+            }
             if (typeof attr_data_timer === "string") {
                 this.data.attributes.timer = parseFloat(attr_data_timer);
                 $(this.element).removeAttr('data-timer');
+                $(this.element).removeData('timer');
             }
             else if (typeof this.config.timer === "string") {
                 this.data.attributes.timer = parseFloat(this.config.timer);
