@@ -22,6 +22,7 @@
         }
     }
     
+    var allUnits = ["Days", "Hours", "Minutes", "Seconds"];
     var nextUnits = {
         Seconds: "Minutes",
         Minutes: "Hours",
@@ -93,7 +94,54 @@
         return new Date();
     }
     
+    function parse_times(diff, old_diff, super_unit, units) {
+        var raw_time = {};
+        var raw_old_time = {};
+        var time = {};
+        var pct = {};
+        var old_time = {};
+        
+        var greater_unit = null;
+        for(var i in units) {
+            var unit = units[i];
+            
+            if(greater_unit === null) greater_unit = super_unit;
+            
+            var maxUnits = secondsIn[greater_unit] / secondsIn[unit];
+            var curUnits = (diff / secondsIn[unit]);
+            var oldUnits = (old_diff / secondsIn[unit]);
+            
+            if(unit !== "Days"){
+                curUnits = curUnits % maxUnits;
+                oldUnits = oldUnits % maxUnits;
+            }
+            
+            raw_time[unit] = curUnits;
+            time[unit] = Math.abs(curUnits);
+            raw_old_time[unit] = oldUnits;
+            old_time[unit] = Math.abs(oldUnits);
+            pct[unit] = Math.abs(curUnits) / maxUnits;
+            
+            greater_unit = unit;
+        }
+        
+        return {
+            raw_time: raw_time,
+            raw_old_time: raw_old_time,
+            time: time,
+            old_time: old_time,
+            pct: pct
+        };
+    }
+    
     var TC_Instance_List = {};
+    // Try fetch/share instance
+    if(window !== window.top && typeof window.top.TC_Instance_List !== "undefined") {
+        TC_Instance_List = window.top.TC_Instance_List;
+    }
+    else {
+        window.top.TC_Instance_List = TC_Instance_List;
+    }
 
     var TC_Instance = function(element, options) {
         this.element = element;
@@ -126,10 +174,27 @@
                 }
             }
         };
-        this.listeners = [];
+        
         this.config = null;
         this.setOptions(options);
+        this.initialize();
+    };
+    
+    TC_Instance.prototype.initialize = function() {
+        // Initialize drawn units
+        this.data.super_unit = null;
+        this.data.drawn_units = [];
+        for(var unit in this.config.time) {
+            if(this.config.time[unit].show){
+                this.data.drawn_units.push(unit);
+                if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
+            }
+        }
         
+        // Avoid stacking
+        $(this.element).children('div.time_circles').remove();
+        
+        this.listeners = { all: [], visible: [] };
         this.container = $("<div>");
         this.container.addClass('time_circles');
         this.container.appendTo(this.element);
@@ -179,13 +244,13 @@
             
             this.data.text_elements[key] = numberElement;
         }
-
-        if (this.config.start)
+        
+        if (this.config.start && this.timer === null)
             this.start();
     };
-
+    
     TC_Instance.prototype.updateArc = function() {
-        var diff, diff_raw, old_diff, old_diff_raw;
+        var diff, old_diff;
 
         var prevDate = this.data.prev_time;
         var curDate = new Date();
@@ -196,83 +261,71 @@
         // If not counting past zero, and time < 0, then simply draw the zero point once, and call stop
         if (!this.config.count_past_zero) {
             if(curDate > this.data.attributes.ref_date) {
-            for (var i in this.data.drawn_units) {
-                var key = this.data.drawn_units[i];
+                for (var i in this.data.drawn_units) {
+                    // TODO: listeners!
+                    var key = this.data.drawn_units[i];
 
-                // Set the text value
-                this.data.text_elements[key].text(Math.floor(time[key]));
-                var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
-                var y = this.data.attributes.item_size / 2;
-                var color = this.config.time[key].color;
-                this.drawArc(x, y, color, 0);
-            }
-            this.stop();
-            return;
+                    // Set the text value
+                    this.data.text_elements[key].text(Math.floor(time[key]));
+                    var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+                    var y = this.data.attributes.item_size / 2;
+                    var color = this.config.time[key].color;
+                    this.drawArc(x, y, color, 0);
+                }
+                this.stop();
+                return;
             }
         }
         
         // Compare current time with reference
-        diff_raw = (this.data.attributes.ref_date - curDate) / 1000;
-        diff = Math.abs(diff_raw);
-        old_diff_raw = (this.data.attributes.ref_date - prevDate) / 1000;
-        old_diff = Math.abs(old_diff_raw);
+        diff = (this.data.attributes.ref_date - curDate) / 1000;
+        old_diff = (this.data.attributes.ref_date - prevDate) / 1000;
         
-        var time = {};
-        var pct = {};
-        var old_time = {};
-        var greater_unit = null;
-        
-        for(var i in this.data.drawn_units) {
-            var unit = this.data.drawn_units[i];
-            if(greater_unit === null) greater_unit = this.data.super_unit;
-            
-            var maxUnits = secondsIn[greater_unit] / secondsIn[unit];
-            var curUnits = (diff / secondsIn[unit]);
-            var oldUnits = (old_diff / secondsIn[unit]);
-            
-            if(unit !== "Days"){
-                curUnits = curUnits % maxUnits;
-                oldUnits = oldUnits % maxUnits;
-            }
-            
-            time[unit] = curUnits;
-            pct[unit] = curUnits / maxUnits;
-            old_time[unit] = oldUnits;
-            
-            greater_unit = unit;
-        }
+        var visible_times = parse_times(diff, old_diff, this.data.super_unit, this.data.drawn_units);
+        var all_times = parse_times(diff, old_diff, "Years", allUnits);
         
         var i = 0;
+        var j = 0;
         var lastKey = null;
-        for (var i in this.data.drawn_units) {
-            var key = this.data.drawn_units[i];
+        
+        var cur_shown = this.data.drawn_units.slice();
+        for (var i in allUnits) {
+            var key = allUnits[i];
+            
+            // Notify (all) listeners
+            if(Math.floor(all_times.raw_time[key]) !== Math.floor(all_times.raw_old_time[key])) {
+                this.notifyListeners(key, Math.floor(all_times.time[key]), Math.floor(diff), "all");
+            }
+            
+            if(cur_shown.indexOf(key) < 0) continue;
+            
+            // Notify (visible) listeners
+            if(Math.floor(visible_times.raw_time[key]) !== Math.floor(visible_times.raw_old_time[key])) {
+                this.notifyListeners(key, Math.floor(visible_times.time[key]), Math.floor(diff), "visible");
+            }
             
             // Set the text value
-            this.data.text_elements[key].text(Math.floor(time[key]));
+            this.data.text_elements[key].text(Math.floor(Math.abs(visible_times.time[key])));
 
-            var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+            var x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
             var y = this.data.attributes.item_size / 2;
             var color = this.config.time[key].color;
 
-            if(Math.floor(time[key]) !== Math.floor(old_time[key])) {
-                this.notifyListeners(key, Math.floor(time[key]), Math.floor(diff_raw));
-            }
-            // TODO: Add option for fading != false
             if (lastKey !== null) {
-                if (Math.floor(time[lastKey]) > Math.floor(old_time[lastKey])) {
+                if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
                     this.radialFade(x, y, color, 1, key);
                     this.data.state.fading[key] = true;
                 }
-                else if (Math.floor(time[lastKey]) < Math.floor(old_time[lastKey])) {
+                else if (Math.floor(visible_times.time[lastKey]) < Math.floor(visible_times.old_time[lastKey])) {
                     this.radialFade(x, y, color, 0, key);
                     this.data.state.fading[key] = true;
                 }
             }
             if (!this.data.state.fading[key]) {
-                this.drawArc(x, y, color, pct[key]);
+                this.drawArc(x, y, color, visible_times.pct[key]);
             }
             lastKey = key;
-            i++;
+            j++;
         }
     };
     
@@ -319,13 +372,13 @@
             // Create inner scope so our variables are not changed by the time the Timeout triggers
             (function() {
                 var rgba = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + (Math.round(from * 10) / 10) + ")";
-                setTimeout(function() {
+                window.top.setTimeout(function() {
                     _this.drawArc(x, y, rgba, 1);
                 }, 50 * i);
             }());
             from += step;
         }
-        setTimeout(function() {
+        window.top.setTimeout(function() {
             _this.data.state.fading[key] = false;
         }, 50 * i);
     };
@@ -334,48 +387,48 @@
         var now = new Date();
         return ((this.data.attributes.ref_date - now) / 1000);
     };
-
+    
     TC_Instance.prototype.start = function() {
-        // Check if a date was passed in html attribute, if not, fall back to config
+        // Check if a date was passed in html attribute or jquery data
         var attr_data_date = $(this.element).data('date');
+        if (typeof attr_data_date === "undefined") {
+            attr_data_date = $(this.element).attr('data-date');
+        }
         if (typeof attr_data_date === "string") {
             this.data.attributes.ref_date = parse_date(attr_data_date);
         }
+        
+        // Check if this is an unpause of a timer
+        else if (typeof this.data.attributes.timer === "number") {
+            this.data.attributes.ref_date = (new Date()).getTime() + (this.data.attributes.timer * 1000);
+        }
         else {
-            var attr_data_timer = $(this.element).attr('data-timer');
+            // Try to get data-timer
+            var attr_data_timer = $(this.element).data('timer');
             if (typeof attr_data_timer === "undefined") {
-                attr_data_timer = $(this.element).data('timer');
+                attr_data_timer = $(this.element).attr('data-timer');
             }
             if (typeof attr_data_timer === "string") {
-                this.data.attributes.timer = parseFloat(attr_data_timer);
-                $(this.element).removeAttr('data-timer');
-                $(this.element).removeData('timer');
+                attr_data_timer = parseFloat(attr_data_timer);
             }
-            else if(typeof attr_data_timer === "number") {
-                this.data.attributes.timer = attr_data_timer;
-                $(this.element).removeAttr('data-timer');
-                $(this.element).removeData('timer');
-            }
-            else if (typeof this.config.timer === "string") {
-                this.data.attributes.timer = parseFloat(this.config.timer);
-                this.config.timer = null;
-            }
-            else if (typeof this.config.timer === "number") {
-                this.data.attributes.timer = _this.config.timer;
-                this.config.timer = null;
-            }
-
-            if (typeof this.data.attributes.timer === "number") {
-                this.data.attributes.ref_date = (new Date()).getTime() + (this.data.attributes.timer * 1000);
+            if(typeof attr_data_timer === "number") {
+                this.data.attributes.ref_date = (new Date()).getTime() + (attr_data_timer * 1000);
             }
             else {
+                // data-timer and data-date were both not set
+                // use config date
                 this.data.attributes.ref_date = this.config.ref_date;
             }
         }
 
         // Start running
         var _this = this;
-        this.timer = setInterval(function() { _this.updateArc(); }, this.config.refresh_interval * 1000);
+        this.timer = window.top.setInterval(function() { _this.updateArc(); }, this.config.refresh_interval * 1000);
+    };
+
+    TC_Instance.prototype.restart = function() {
+        this.data.attributes.timer = null;
+        this.start();
     };
 
     TC_Instance.prototype.stop = function() {
@@ -383,7 +436,7 @@
             this.data.attributes.timer = this.timeLeft(this);
         }
         // Stop running
-        clearInterval(this.timer);
+        window.top.clearInterval(this.timer);
     };
 
     TC_Instance.prototype.destroy = function() {
@@ -398,29 +451,20 @@
             this.config = $.extend(true, {}, this.default_options);
         }
         $.extend(true, this.config, options);
-        
-        this.data.super_unit = null;
-        this.data.drawn_units = [];
-        for(var unit in this.config.time) {
-            if(this.config.time[unit].show){
-                this.data.drawn_units.push(unit);
-                if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
-            }
-        }
     };
     
-    TC_Instance.prototype.addListener = function(f, _this) {
-        console.log(_this);
+    TC_Instance.prototype.addListener = function(f, context, type) {
         if(typeof f !== "function") return;
-        this.listeners.push( {func: f, scope: _this});
+        if(typeof type === "undefined") type = "visible";
+        this.listeners[type].push({func: f, scope: context});
     };
     
-    TC_Instance.prototype.notifyListeners = function(unit, value, total) {
-        for(var i = 0; i < this.listeners.length; i++) {
-            var listener = this.listeners[i];
+    TC_Instance.prototype.notifyListeners = function(unit, value, total, type) {
+        for(var i = 0; i < this.listeners[type].length; i++) {
+            var listener = this.listeners[type][i];
             listener.func.apply(listener.scope, [unit, value, total]);
         }
-    }
+    };
     
     TC_Instance.prototype.default_options = {
         ref_date: new Date(),
@@ -461,32 +505,37 @@
         this.options = options;
         this.foreach();
     };
+    
+    TC_Class.prototype.getInstance = function(element) {
+        var instance;
+        
+        var cur_id = $(element).data("tc-id");
+        if (typeof cur_id === "undefined") {
+            cur_id = guid();
+            $(element).attr("data-tc-id", cur_id);
+        }
+        if (typeof TC_Instance_List[cur_id] === "undefined") {
+            var element_options = $(element).data('options');
+            var options = this.options;
+            if(typeof element_options === "object") {
+                options = $.extend(true, {}, this.options, element_options);
+            }
+            instance = new TC_Instance(element, options);
+            TC_Instance_List[cur_id] = instance;
+        }
+        else {
+            instance = TC_Instance_List[cur_id];
+            if (typeof this.options !== "undefined") {
+                instance.setOptions(this.options);
+            }
+        }
+        return instance;
+    };
 
     TC_Class.prototype.foreach = function(callback) {
         var _this = this;
         this.elements.each(function() {
-            var instance;
-            var cur_id = $(this).data("tc-id");
-            if (typeof cur_id === "undefined") {
-                cur_id = guid();
-                $(this).data("tc-id", cur_id);
-            }
-            if (typeof TC_Instance_List[cur_id] === "undefined") {
-                var element_options = $(this).data('options');
-                var options = _this.options;
-                if(typeof element_options === "object") {
-                    options = $.extend(true, {}, _this.options, element_options);
-                }
-                instance = new TC_Instance(this, options);
-                TC_Instance_List[cur_id] = instance;
-            }
-            else {
-                instance = TC_Instance_List[cur_id];
-                if (typeof _this.options !== "undefined") {
-                    instance.setOptions(_this.options);
-                }
-            }
-
+            var instance = _this.getInstance(this);
             if (typeof callback === "function") {
                 callback(instance);
             }
@@ -494,10 +543,6 @@
         return this;
     };
     
-    TC_Class.prototype.all_instances = function() {
-        return TC_Instance_List;
-    }
-
     TC_Class.prototype.start = function() {
         this.foreach(function(instance) {
             instance.start();
@@ -511,11 +556,30 @@
         });
         return this;
     };
-
-    TC_Class.prototype.addListener = function(f) {
+    
+    TC_Class.prototype.restart = function() {
+        this.foreach(function(instance) {
+            instance.restart();
+        });
+        return this;
+    };
+    
+    TC_Class.prototype.rebuild = function() {
+        this.foreach(function(instance) {
+            instance.initialize();
+        });
+        return this;
+    };
+    
+    TC_Class.prototype.getTime = function() {
+        return this.getInstance(this.elements[0]).timeLeft();
+    };
+    
+    TC_Class.prototype.addListener = function(f, type) {
+        if(typeof type === "undefined") type = "visible";
         var _this = this;
         this.foreach(function(instance) {
-            instance.addListener(f, _this.elements);
+            instance.addListener(f, _this.elements, type);
         });
         return this;
     };
