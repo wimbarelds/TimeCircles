@@ -442,7 +442,7 @@
     TC_Instance.prototype.destroy = function() {
         this.stop();
         this.container.remove();
-        $(this.element).removeData('tc-id');
+        $(this.element).removeAttr('data-tc-id');
     };
 
     TC_Instance.prototype.setOptions = function(options) {
