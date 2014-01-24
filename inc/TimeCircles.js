@@ -185,9 +185,9 @@
         this.data.super_unit = null;
         this.data.drawn_units = [];
         for(var unit in this.config.time) {
+            if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
             if(this.config.time[unit].show){
                 this.data.drawn_units.push(unit);
-                if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
             }
         }
         
@@ -443,6 +443,7 @@
         this.stop();
         this.container.remove();
         $(this.element).removeAttr('data-tc-id');
+        $(this.element).removeData('tc-id');
     };
 
     TC_Instance.prototype.setOptions = function(options) {
