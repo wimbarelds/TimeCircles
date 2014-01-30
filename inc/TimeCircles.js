@@ -147,6 +147,7 @@
         this.element = element;
         this.container;
         this.timer = null;
+        this.listeners = null;
         this.data = {
             prev_time: null,
             drawn_units: [],
@@ -180,7 +181,7 @@
         this.initialize();
     };
     
-    TC_Instance.prototype.initialize = function() {
+    TC_Instance.prototype.initialize = function(clear_listeners) {
         // Initialize drawn units
         this.data.super_unit = null;
         this.data.drawn_units = [];
@@ -194,7 +195,10 @@
         // Avoid stacking
         $(this.element).children('div.time_circles').remove();
         
-        this.listeners = { all: [], visible: [] };
+        if(typeof clear_listeners === "undefined") clear_listeners = true;
+        if(clear_listeners || this.listeners === null) {
+            this.listeners = { all: [], visible: [] };
+        }
         this.container = $("<div>");
         this.container.addClass('time_circles');
         this.container.appendTo(this.element);
@@ -567,7 +571,7 @@
     
     TC_Class.prototype.rebuild = function() {
         this.foreach(function(instance) {
-            instance.initialize();
+            instance.initialize(false);
         });
         return this;
     };
