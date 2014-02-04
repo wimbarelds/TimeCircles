@@ -34,6 +34,7 @@
         Minutes: 60,
         Hours: 3600,
         Days: 86400,
+        Months: 2678400,
         Years: 31536000
     };
     
@@ -94,7 +95,7 @@
         return new Date();
     }
     
-    function parse_times(diff, old_diff, super_unit, units) {
+    function parse_times(diff, old_diff, total_duration, units) {
         var raw_time = {};
         var raw_old_time = {};
         var time = {};
@@ -104,10 +105,15 @@
         var greater_unit = null;
         for(var i in units) {
             var unit = units[i];
+            var maxUnits;
             
-            if(greater_unit === null) greater_unit = super_unit;
+            if(greater_unit === null) {
+                maxUnits = total_duration / secondsIn[unit];
+            }
+            else {
+                maxUnits = secondsIn[greater_unit] / secondsIn[unit];
+            }
             
-            var maxUnits = secondsIn[greater_unit] / secondsIn[unit];
             var curUnits = (diff / secondsIn[unit]);
             var oldUnits = (old_diff / secondsIn[unit]);
             
@@ -151,7 +157,6 @@
         this.data = {
             prev_time: null,
             drawn_units: [],
-            super_unit: null,
             text_elements: {
                 Days: null,
                 Hours: null,
@@ -183,10 +188,8 @@
     
     TC_Instance.prototype.initialize = function(clear_listeners) {
         // Initialize drawn units
-        this.data.super_unit = null;
         this.data.drawn_units = [];
         for(var unit in this.config.time) {
-            if(this.data.super_unit === null) this.data.super_unit = nextUnits[unit];
             if(this.config.time[unit].show){
                 this.data.drawn_units.push(unit);
             }
@@ -270,7 +273,7 @@
                     var key = this.data.drawn_units[i];
 
                     // Set the text value
-                    this.data.text_elements[key].text(Math.floor(time[key]));
+                    this.data.text_elements[key].text("0");
                     var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
                     var y = this.data.attributes.item_size / 2;
                     var color = this.config.time[key].color;
@@ -285,8 +288,8 @@
         diff = (this.data.attributes.ref_date - curDate) / 1000;
         old_diff = (this.data.attributes.ref_date - prevDate) / 1000;
         
-        var visible_times = parse_times(diff, old_diff, this.data.super_unit, this.data.drawn_units);
-        var all_times = parse_times(diff, old_diff, "Years", allUnits);
+        var visible_times = parse_times(diff, old_diff, this.config.total_duration, this.data.drawn_units);
+        var all_times = parse_times(diff, old_diff, secondsIn["Years"], allUnits);
         
         var i = 0;
         var j = 0;
@@ -314,7 +317,7 @@
             var x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
             var y = this.data.attributes.item_size / 2;
             var color = this.config.time[key].color;
-
+            
             if (lastKey !== null) {
                 if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
                     this.radialFade(x, y, color, 1, key);
@@ -456,6 +459,27 @@
             this.config = $.extend(true, {}, this.default_options);
         }
         $.extend(true, this.config, options);
+        
+        if(typeof this.config.total_duration === "string") {
+            if(typeof secondsIn[this.config.total_duration] !== "undefined") {
+                // If set to Years, Months, Days, Hours or Minutes, fetch the secondsIn value for that
+                this.config.total_duration = secondsIn[this.config.total_duration];
+            }
+            else if (this.config.total_duration === "Auto") {
+                // If set to auto, total_duration is the size of 1 unit, of the unit type bigger than the largest shown
+                for(var unit in this.config.time) {
+                    if(this.config.time[unit].show) {
+                        this.config.total_duration = secondsIn[nextUnits[unit]];
+                        break;
+                    }
+                }
+            }
+            else {
+                // If it's a string, but neither of the above, user screwed up.
+                this.config.total_duration = secondsIn["Years"];
+                console.error("Valid values for TimeCircles config.total_duration are either numeric, or (string) Years, Months, Days, Hours, Minutes, Auto");
+            }
+        }
     };
     
     TC_Instance.prototype.addListener = function(f, context, type) {
@@ -480,6 +504,7 @@
         use_background: true,
         fg_width: 0.1,
         bg_width: 1.2,
+        total_duration: "Auto",
         time: {
             Days: {
                 show: true,
