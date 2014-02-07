@@ -105,12 +105,14 @@ The time option is actually a group of options that allows you to control the op
 * **text:** Determines the text shown below the time. Useful for use on non-English websites
 * **color:** Determines the color of the foreground circle of the time unit
 
+```
     $(".example").TimeCircles({ time: {
         Days: { color: "#C0C8CF" },
         Hours: { color: "#C0C8CF" },
         Minutes: { color: "#C0C8CF" },
         Seconds: { color: "#C0C8CF" }
     }});
+```
 
 ## Functions
 
