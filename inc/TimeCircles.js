@@ -354,10 +354,31 @@
             this.data.attributes.context.strokeStyle = this.config.circle_bg_color;
             this.data.attributes.context.stroke();
         }
-
-        var startAngle = (-0.5 * Math.PI);
-        var endAngle = (-0.5 * Math.PI) + (2 * pct * Math.PI);
-        var counterClockwise = false;
+        
+        // Direction
+        var startAngle, endAngle, counterClockwise;
+        var defaultOffset = (-0.5 * Math.PI);
+        var fullCircle = 2 * Math.PI;
+        startAngle = defaultOffset + (this.config.start_angle / 360 * fullCircle);
+        var offset = (2 * pct * Math.PI);
+        
+        if(this.config.direction === "Both") {
+            counterClockwise = false;
+            startAngle -= (offset / 2);
+            endAngle = startAngle + offset;
+        }
+        else {
+            if(this.config.direction === "Clockwise") {
+                counterClockwise = false;
+                endAngle = startAngle + offset;
+            }
+            else {
+                counterClockwise = true;
+                endAngle = startAngle - offset;
+            }
+        }
+        startAngle = (startAngle + fullCircle) % fullCircle;
+        endAngle = (endAngle + fullCircle) % fullCircle;
 
         this.data.attributes.context.beginPath();
         this.data.attributes.context.arc(x, y, this.data.attributes.radius, startAngle, endAngle, counterClockwise);
@@ -505,6 +526,8 @@
         fg_width: 0.1,
         bg_width: 1.2,
         total_duration: "Auto",
+        direction: "Clockwise",
+        start_angle: 0,
         time: {
             Days: {
                 show: true,
@@ -545,8 +568,11 @@
             $(element).attr("data-tc-id", cur_id);
         }
         if (typeof TC_Instance_List[cur_id] === "undefined") {
-            var element_options = $(element).data('options');
             var options = this.options;
+            var element_options = $(element).data('options');
+            if(typeof element_options === "string") {
+                element_options = JSON.parse(element_options);
+            }
             if(typeof element_options === "object") {
                 options = $.extend(true, {}, this.options, element_options);
             }

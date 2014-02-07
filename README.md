@@ -79,6 +79,24 @@ This option sets the width of the backgroundground circle. The width of the back
 
     $(".example").TimeCircles({bg_width: 0.5}); 
 
+### total_duration `(default: "Auto")`
+
+This option can be set to change how much time will fill the largest visible circle. Normally this is the Days circle, but this can be any of the other circles depending on visible settings. Valid for this variable are "Auto", "Years", "Months", "Days", "Hours", "Minutes" or any numeric value (ie: 30 for thirty seconds).
+
+    $(".example").TimeCircles({total_duration: "Auto"});
+
+### direction `(default: "Clockwise")`
+
+This option can be set to change the direction in which the circles fill up. Valid values for this are "Clockwise", "Counter-clockwise" or "Both".
+
+    $(".example").TimeCircles({direction: "Clockwise"});
+
+### start_angle `(default: 0)`
+
+This option can be set to change the starting point from which the circles will fill up. This should be an integer value between 0 and 360. 0 is from the top, 90 from the right, 180 from the bottom and 270 from the left.
+
+    $(".example").TimeCircles({start_angle: 0});
+
 ### time
 
 The time option is actually a group of options that allows you to control the options of each time unit independently. As such, within time each unit of time has its own sub-category. These categories are: Days, Hours, Minutes, and Seconds. The options available within each category are as follows:
@@ -102,21 +120,23 @@ Before we go into what each function does however, it should be pointed out how 
 
 TimeCircles functions themselves (with the exception of the `end()` function) will return the TimeCircles object. This allows you to chain several functions into each other. IE: You could chain `start()` straight into `addEventListener(callback)`.
 
-### start() and stop()
+### start() , stop() and restart()
 
-These are the most basic functions provided. They allow you to temporarily stop TimeCircles. This is especially useful when you're using TimeCircles as a sort of stopwatch (ie: counting down a certain number of seconds). If you're using TimeCircles to count down to a certain point in the future, obviously pausing TimeCircles isn't going to stop time itself.
+These are the most basic functions provided. They allow you to temporarily stop TimeCircles or restart it. Start will unpause the timer when it's stopped, restart will restart it from it's original value. If you're using TimeCircles to count down to a certain point in the future, upon unpausing the countdown will jump ahead.
 
 **Html**
 
     <div class="example stopwatch" data-timer="900"></div>
     <button class="btn btn-success start">Start</button>
-    <button class="btn btn-success start">Stop</button>
+    <button class="btn btn-danger stop">Stop</button>
+    <button class="btn btn-info restart">Restart</button>
 
 **Javascript**
 
-    $(".example").TimeCircles();
-    $(".stop").click(function(){ $(".example.stopwatch").TimeCircles().stop(); });
+    $(".example.stopwatch").TimeCircles();
     $(".start").click(function(){ $(".example.stopwatch").TimeCircles().start(); });
+    $(".stop").click(function(){ $(".example.stopwatch").TimeCircles().stop(); });
+    $(".restart").click(function(){ $(".example.stopwatch").TimeCircles().restart(); });
 
 ### destroy()
 
@@ -124,11 +144,25 @@ If for some reason, you need to get rid of your TimeCircles, or you want to allo
 
     $(".example").TimeCircles().destroy();
 
-### addListener `(callback)`
+### rebuild()
+
+Some options or variables are only initialized once, at the time of creating TimeCircles (For example, the width and height, or which circles are being shown). If you change these settings later on, you can have everything reinitialized anew by using `.rebuild()`
+
+    $(".example").TimeCircles().rebuild();
+
+### getTime()
+
+Retrieves the number seconds left (or since) the zero point. Values until zero are positive, values after zero are negative.
+
+    $(".example").TimeCircles().getTime();
+
+### addListener `(callback, type = "visible")`
 
 The most powerful interactions with TimeCircles can be achieved using listeners. Using listeners, you can make a ticking sound play every second, or you can make a sound whenever a minute passes. You could even use it to trigger some alarm or whole other javascript when the timer hits zero.
 
-To add a listener, use the `addEventListener(callback)` function. Callback is a function you pass to the event listener. The callback will then be triggered for each event. Three parameters are passed to your callback function, namely:
+The type parameter allows you to listen to either only the events from the visible TimeCircles, or all TimeCircles. Correct values are "visible" or "all". The default value is "visible", but through using "all" you can listen to the circles you're hiding (if you're hiding any of course).
+
+To add a listener, use the `addEventListener(callback, type)` function. Callback is a function you pass to the event listener. The callback will then be triggered for each event. Three parameters are passed to your callback function, namely:
 
 * **unit:** The time unit in string format. So, "Days"/"Hours"/"Minutes"/"Seconds".
 * **value:** The new value of the time unit that changed. I.e.: 15.
