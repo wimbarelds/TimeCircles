@@ -15,6 +15,9 @@
  **/
 (function($) {
     
+    // Used to disable drawing on IE8, which can't use canvas
+    var cant_draw = false;
+    
     var debug = (location.hash === "#debug");
     function debug_log(msg) {
         if(debug) {
@@ -155,6 +158,7 @@
         this.timer = null;
         this.listeners = null;
         this.data = {
+            total_duration: null,
             prev_time: null,
             drawn_units: [],
             text_elements: {
@@ -207,7 +211,12 @@
         this.container.appendTo(this.element);
 
         this.data.attributes.canvas = $("<canvas>");
-        this.data.attributes.context = this.data.attributes.canvas[0].getContext('2d');
+        try {
+            this.data.attributes.context = this.data.attributes.canvas[0].getContext('2d');
+        }
+        catch(e) {
+            cant_draw = true;
+        }
         
         var height = this.element.offsetHeight;
         var width = this.element.offsetWidth;
@@ -288,7 +297,7 @@
         diff = (this.data.attributes.ref_date - curDate) / 1000;
         old_diff = (this.data.attributes.ref_date - prevDate) / 1000;
         
-        var visible_times = parse_times(diff, old_diff, this.config.total_duration, this.data.drawn_units);
+        var visible_times = parse_times(diff, old_diff, this.data.total_duration, this.data.drawn_units);
         var all_times = parse_times(diff, old_diff, secondsIn["Years"], allUnits);
         
         var i = 0;
@@ -337,6 +346,8 @@
     };
     
     TC_Instance.prototype.drawArc = function(x, y, color, pct) {
+        if(cant_draw) return;
+        
         var clear_radius = Math.max(this.data.attributes.outer_radius, this.data.attributes.item_size / 2);
         this.data.attributes.context.clearRect(
             x - clear_radius,
@@ -473,7 +484,7 @@
         $(this.element).removeAttr('data-tc-id');
         $(this.element).removeData('tc-id');
     };
-
+    
     TC_Instance.prototype.setOptions = function(options) {
         if(this.config === null) {
             this.default_options.ref_date = new Date();
@@ -481,23 +492,24 @@
         }
         $.extend(true, this.config, options);
         
-        if(typeof this.config.total_duration === "string") {
-            if(typeof secondsIn[this.config.total_duration] !== "undefined") {
+        this.data.total_duration = this.config.total_duration;
+        if(typeof this.data.total_duration === "string") {
+            if(typeof secondsIn[this.data.total_duration] !== "undefined") {
                 // If set to Years, Months, Days, Hours or Minutes, fetch the secondsIn value for that
-                this.config.total_duration = secondsIn[this.config.total_duration];
+                this.data.total_duration = secondsIn[this.data.total_duration];
             }
-            else if (this.config.total_duration === "Auto") {
+            else if (this.data.total_duration === "Auto") {
                 // If set to auto, total_duration is the size of 1 unit, of the unit type bigger than the largest shown
                 for(var unit in this.config.time) {
                     if(this.config.time[unit].show) {
-                        this.config.total_duration = secondsIn[nextUnits[unit]];
+                        this.data.total_duration = secondsIn[nextUnits[unit]];
                         break;
                     }
                 }
             }
             else {
                 // If it's a string, but neither of the above, user screwed up.
-                this.config.total_duration = secondsIn["Years"];
+                this.data.total_duration = secondsIn["Years"];
                 console.error("Valid values for TimeCircles config.total_duration are either numeric, or (string) Years, Months, Days, Hours, Minutes, Auto");
             }
         }
