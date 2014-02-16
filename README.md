@@ -43,11 +43,11 @@ This option determines whether or not TimeCircles should start immediately. If f
 
     $(".example").TimeCircles({start: false}); 
 
-### refresh_interval `(default: 0.1)`
+### animation `(default: "smooth")`
 
-This option determines how frequently TimeCircles is updated. The value is expressed in seconds, so 0.1 means one tenth of a second.
+The way the circles animate can be either a constant gradual rotating, slowly moving from one second to the other. Or it can be set to jump from one unit to the next, only changing the circle when the number within it also changes. The first type is called `"smooth"`, the second type is called `"ticks"`.
 
-    $(".example").TimeCircles({refresh_interval: 1});
+    $(".example").TimeCircles({animation_interval: "smooth"});
 
 ### count_past_zero `(default: true)`
 

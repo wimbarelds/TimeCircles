@@ -17,6 +17,7 @@
     
     // Used to disable drawing on IE8, which can't use canvas
     var cant_draw = false;
+    var tick_duration = 200; // in ms
     
     var debug = (location.hash === "#debug");
     function debug_log(msg) {
@@ -98,11 +99,12 @@
         return new Date();
     }
     
-    function parse_times(diff, old_diff, total_duration, units) {
+    function parse_times(diff, old_diff, total_duration, units, floor) {
         var raw_time = {};
         var raw_old_time = {};
         var time = {};
         var pct = {};
+        var old_pct = {};
         var old_time = {};
         
         var greater_unit = null;
@@ -119,6 +121,8 @@
             
             var curUnits = (diff / secondsIn[unit]);
             var oldUnits = (old_diff / secondsIn[unit]);
+            if(floor) curUnits = Math.floor(curUnits);
+            if(floor) oldUnits = Math.floor(oldUnits);
             
             if(unit !== "Days"){
                 curUnits = curUnits % maxUnits;
@@ -130,6 +134,7 @@
             raw_old_time[unit] = oldUnits;
             old_time[unit] = Math.abs(oldUnits);
             pct[unit] = Math.abs(curUnits) / maxUnits;
+            old_pct[unit] = Math.abs(oldUnits) / maxUnits;
             
             greater_unit = unit;
         }
@@ -139,7 +144,8 @@
             raw_old_time: raw_old_time,
             time: time,
             old_time: old_time,
-            pct: pct
+            pct: pct,
+            old_pct: old_pct
         };
     }
     
@@ -151,13 +157,38 @@
     else {
         window.top.TC_Instance_List = TC_Instance_List;
     }
+    
+    (function(){
+        var vendors = ['webkit', 'moz'];
+        for(var x = 0; x < vendors.length && !window.top.requestAnimationFrame; ++x) {
+            window.top.requestAnimationFrame = window.top[vendors[x]+'RequestAnimationFrame'];
+        }        
+        if (!window.top.requestAnimationFrame) {
+            window.top.requestAnimationFrame = function(callback, element, instance) {
+                if(typeof instance === "undefined") instance = { data: { last_frame: 0 } };
+                var currTime = new Date().getTime();
+                var timeToCall = Math.max(0, 16 - (currTime - instance.data.last_frame));
+                var id = window.top.setTimeout(function() {
+                    callback(currTime + timeToCall);
+                }, timeToCall);
+                instance.data.last_frame = currTime + timeToCall;
+                return id;
+            };
+            window.top.cancelAnimationFrame = function(id) {
+                clearTimeout(id);
+            }
+        }
+    })();
+    
 
     var TC_Instance = function(element, options) {
         this.element = element;
         this.container;
-        this.timer = null;
         this.listeners = null;
         this.data = {
+            paused: false,
+            last_frame: 0,
+            animation_frame: null,
             total_duration: null,
             prev_time: null,
             drawn_units: [],
@@ -261,11 +292,11 @@
             this.data.text_elements[key] = numberElement;
         }
         
-        if (this.config.start && this.timer === null)
+        if (this.config.start && this.data.paused === false)
             this.start();
     };
     
-    TC_Instance.prototype.updateArc = function() {
+    TC_Instance.prototype.update = function() {
         var diff, old_diff;
 
         var prevDate = this.data.prev_time;
@@ -297,8 +328,10 @@
         diff = (this.data.attributes.ref_date - curDate) / 1000;
         old_diff = (this.data.attributes.ref_date - prevDate) / 1000;
         
-        var visible_times = parse_times(diff, old_diff, this.data.total_duration, this.data.drawn_units);
-        var all_times = parse_times(diff, old_diff, secondsIn["Years"], allUnits);
+        var floor = this.config.animation !== "smooth";
+        
+        var visible_times = parse_times(diff, old_diff, this.data.total_duration, this.data.drawn_units, floor);
+        var all_times = parse_times(diff, old_diff, secondsIn["Years"], allUnits, floor);
         
         var i = 0;
         var j = 0;
@@ -327,21 +360,76 @@
             var y = this.data.attributes.item_size / 2;
             var color = this.config.time[key].color;
             
-            if (lastKey !== null) {
-                if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
-                    this.radialFade(x, y, color, 1, key);
-                    this.data.state.fading[key] = true;
+            if(this.config.animation === "smooth") {
+                if (lastKey !== null) {
+                    if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
+                        this.radialFade(x, y, color, 1, key);
+                        this.data.state.fading[key] = true;
+                    }
+                    else if (Math.floor(visible_times.time[lastKey]) < Math.floor(visible_times.old_time[lastKey])) {
+                        this.radialFade(x, y, color, 0, key);
+                        this.data.state.fading[key] = true;
+                    }
                 }
-                else if (Math.floor(visible_times.time[lastKey]) < Math.floor(visible_times.old_time[lastKey])) {
-                    this.radialFade(x, y, color, 0, key);
-                    this.data.state.fading[key] = true;
+                if (!this.data.state.fading[key]) {
+                    this.drawArc(x, y, color, visible_times.pct[key]);
                 }
             }
-            if (!this.data.state.fading[key]) {
-                this.drawArc(x, y, color, visible_times.pct[key]);
+            else {
+                this.animateArc(x, y, color, visible_times.pct[key], visible_times.old_pct[key], (new Date()).getTime() + tick_duration);
             }
             lastKey = key;
             j++;
+        }
+        
+        // We need this for our next frame either way
+        var _this = this;
+        var update = function() {
+            _this.update.call(_this);
+        };
+        
+        // Either call next update immediately, or in a second
+        if(this.config.animation === "smooth") {
+            // Smooth animation, Queue up the next frame
+            this.data.animation_frame = window.top.requestAnimationFrame(update, _this.element, _this);
+        }
+        else {
+            // Tick animation, Don't queue until very slightly after the next second happens
+            var delay = (diff % 1) * 1000;
+            if(delay < 0) delay = 1000 + delay;
+            delay += 50;
+            
+            _this.data.animation_frame = window.top.setTimeout(function(){
+                _this.data.animation_frame = window.top.requestAnimationFrame(update, _this.element, _this);
+            }, delay);
+        }
+    };
+    
+    TC_Instance.prototype.animateArc = function(x, y, color, target_pct, cur_pct, animation_end) {
+        if(cant_draw) return;
+        
+        var diff = cur_pct - target_pct;
+        if(Math.abs(diff) > 0.5) {
+            if(target_pct === 0) {
+                this.radialFade(x, y, color, 1);
+            }
+            else {
+                this.radialFade(x, y, color, 0);
+            }
+        }
+        else {
+            var progress = (tick_duration - (animation_end - (new Date()).getTime())) / tick_duration;
+            if(progress > 1) progress = 1;
+            
+            var pct = (cur_pct * (1 - progress)) + (target_pct * progress);
+            this.drawArc(x, y, color, pct);
+            
+            //var show_pct =
+            if(progress >= 1) return;
+            var _this = this;
+            window.top.requestAnimationFrame(function(){
+                _this.animateArc(x, y, color, target_pct, cur_pct, animation_end);
+            }, this.element, null);
         }
     };
     
@@ -388,8 +476,6 @@
                 endAngle = startAngle - offset;
             }
         }
-        startAngle = (startAngle + fullCircle) % fullCircle;
-        endAngle = (endAngle + fullCircle) % fullCircle;
 
         this.data.attributes.context.beginPath();
         this.data.attributes.context.arc(x, y, this.data.attributes.radius, startAngle, endAngle, counterClockwise);
@@ -410,16 +496,19 @@
         for (i = 0; from <= 1 && from >= 0; i++) {
             // Create inner scope so our variables are not changed by the time the Timeout triggers
             (function() {
+                var delay = 50 * i;
                 var rgba = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + (Math.round(from * 10) / 10) + ")";
                 window.top.setTimeout(function() {
                     _this.drawArc(x, y, rgba, 1);
-                }, 50 * i);
+                }, delay);
             }());
             from += step;
         }
-        window.top.setTimeout(function() {
-            _this.data.state.fading[key] = false;
-        }, 50 * i);
+        if(typeof key !== undefined) {
+            window.top.setTimeout(function() {
+                _this.data.state.fading[key] = false;
+            }, 50 * i);
+        }
     };
 
     TC_Instance.prototype.timeLeft = function() {
@@ -428,6 +517,9 @@
     };
     
     TC_Instance.prototype.start = function() {
+        window.top.cancelAnimationFrame(this.data.animation_frame);
+        window.top.clearTimeout(this.data.animation_frame)
+        
         // Check if a date was passed in html attribute or jquery data
         var attr_data_date = $(this.element).data('date');
         if (typeof attr_data_date === "undefined") {
@@ -436,7 +528,6 @@
         if (typeof attr_data_date === "string") {
             this.data.attributes.ref_date = parse_date(attr_data_date);
         }
-        
         // Check if this is an unpause of a timer
         else if (typeof this.data.attributes.timer === "number") {
             this.data.attributes.ref_date = (new Date()).getTime() + (this.data.attributes.timer * 1000);
@@ -461,8 +552,8 @@
         }
 
         // Start running
-        var _this = this;
-        this.timer = window.top.setInterval(function() { _this.updateArc(); }, this.config.refresh_interval * 1000);
+        this.data.paused = false;
+        this.update();
     };
 
     TC_Instance.prototype.restart = function() {
@@ -475,7 +566,8 @@
             this.data.attributes.timer = this.timeLeft(this);
         }
         // Stop running
-        window.top.clearInterval(this.timer);
+        this.data.paused = true;
+        window.top.cancelAnimationFrame(this.data.animation_frame);
     };
 
     TC_Instance.prototype.destroy = function() {
@@ -531,7 +623,7 @@
     TC_Instance.prototype.default_options = {
         ref_date: new Date(),
         start: true,
-        refresh_interval: 0.1,
+        animation: "smooth",
         count_past_zero: true,
         circle_bg_color: "#60686F",
         use_background: true,
