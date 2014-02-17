@@ -189,6 +189,7 @@
             paused: false,
             last_frame: 0,
             animation_frame: null,
+            timer: false,
             total_duration: null,
             prev_time: null,
             drawn_units: [],
@@ -529,8 +530,10 @@
             this.data.attributes.ref_date = parse_date(attr_data_date);
         }
         // Check if this is an unpause of a timer
-        else if (typeof this.data.attributes.timer === "number") {
-            this.data.attributes.ref_date = (new Date()).getTime() + (this.data.attributes.timer * 1000);
+        else if (typeof this.data.timer === "number") {
+            if(this.data.paused) {
+                this.data.attributes.ref_date = (new Date()).getTime() + (this.data.timer * 1000);
+            }
         }
         else {
             // Try to get data-timer
@@ -542,6 +545,7 @@
                 attr_data_timer = parseFloat(attr_data_timer);
             }
             if(typeof attr_data_timer === "number") {
+                this.data.timer = attr_data_timer;
                 this.data.attributes.ref_date = (new Date()).getTime() + (attr_data_timer * 1000);
             }
             else {
@@ -557,13 +561,13 @@
     };
 
     TC_Instance.prototype.restart = function() {
-        this.data.attributes.timer = null;
+        this.data.timer = false;
         this.start();
     };
 
     TC_Instance.prototype.stop = function() {
-        if (typeof this.data.attributes.timer === "number") {
-            this.data.attributes.timer = this.timeLeft(this);
+        if (typeof this.data.timer === "number") {
+            this.data.timer = this.timeLeft(this);
         }
         // Stop running
         this.data.paused = true;
