@@ -162,8 +162,10 @@
         var vendors = ['webkit', 'moz'];
         for(var x = 0; x < vendors.length && !window.top.requestAnimationFrame; ++x) {
             window.top.requestAnimationFrame = window.top[vendors[x]+'RequestAnimationFrame'];
+            window.top.cancelAnimationFrame = window.top[vendors[x]+'CancelAnimationFrame'];
         }        
-        if (!window.top.requestAnimationFrame) {
+        
+        if (!window.top.requestAnimationFrame || !window.top.cancelAnimationFrame) {
             window.top.requestAnimationFrame = function(callback, element, instance) {
                 if(typeof instance === "undefined") instance = { data: { last_frame: 0 } };
                 var currTime = new Date().getTime();
@@ -176,7 +178,7 @@
             };
             window.top.cancelAnimationFrame = function(id) {
                 clearTimeout(id);
-            }
+            };
         }
     })();
     
