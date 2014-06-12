@@ -79,6 +79,12 @@ This option sets the width of the backgroundground circle. The width of the back
 
     $(".example").TimeCircles({bg_width: 0.5}); 
 
+### text_size `(default: 0.07)`
+
+This option sets the font size of the text in the circles. The size is set relative to the size of the circle as a whole. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring.
+
+    $(".example").TimeCircles({text_size: 0.1}); 
+
 ### total_duration `(default: "Auto")`
 
 This option can be set to change how much time will fill the largest visible circle. Normally this is the Days circle, but this can be any of the other circles depending on visible settings. Valid for this variable are "Auto", "Years", "Months", "Days", "Hours", "Minutes" or any numeric value (ie: 30 for thirty seconds).
