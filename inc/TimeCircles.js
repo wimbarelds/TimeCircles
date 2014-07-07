@@ -401,13 +401,13 @@
 
             var headerElement = $("<h4>");
             headerElement.text(this.config.time[key].text); // Options
-            headerElement.css("font-size", Math.round(0.07 * this.data.attributes.item_size));
-            headerElement.css("line-height", Math.round(0.07 * this.data.attributes.item_size) + "px");
+            headerElement.css("font-size", Math.round(this.config.text_size * this.data.attributes.item_size));
+            headerElement.css("line-height", Math.round(this.config.text_size * this.data.attributes.item_size) + "px");
             headerElement.appendTo(textElement);
 
             var numberElement = $("<span>");
-            numberElement.css("font-size", Math.round(0.21 * this.data.attributes.item_size));
-            numberElement.css("line-height", Math.round(0.07 * this.data.attributes.item_size) + "px");
+            numberElement.css("font-size", Math.round(3 * this.config.text_size * this.data.attributes.item_size));
+            numberElement.css("line-height", Math.round(this.config.text_size * this.data.attributes.item_size) + "px");
             numberElement.appendTo(textElement);
 
             this.data.text_elements[key] = numberElement;
@@ -783,6 +783,7 @@
         use_background: true,
         fg_width: 0.1,
         bg_width: 1.2,
+        text_size: 0.07,
         total_duration: "Auto",
         direction: "Clockwise",
         use_top_frame: false,
