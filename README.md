@@ -7,11 +7,38 @@ This documentation will provide some examples of how to use TimeCircles. Usage o
 
 ## General use
 
+### Without bower
 The first thing to do is to include the javascript files for jQuery and TimeCircles, as well as the TimeCircles stylesheet. These should ideally be included in the head of your html file.
 
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="TimeCircles.js"></script>
     <link href="TimeCircles.css" rel="stylesheet">
+
+### With bower (http://bower.io)
+
+If you don't have node.js, npm and bower installed, please fallback to method n°1 or install them before going any further. This method assumes that you have basic knowledge of these tools and already have them installed and available on a cli based shell.
+
+If you don't already use bower in your project, type the following command in a cli shell at the root of your project and answer all the questions asked :
+
+    bower init
+
+Once bower is installed, in a cli shell at the root of your project, type the following :
+
+    bower install timecircles --save
+
+And then, in your html files, include the following in your `<head>` section :    
+
+    <script type="text/javascript" src="bower_components dir\jquery\dist\jquery.min.js""></script>
+    <script type="text/javascript" src="bower_components dir\timecircles\inc\TimeCircles.js"></script>
+    <link href="bower_components dir\timecircles\inc\TimeCircles.css" rel="stylesheet">
+    
+Replace `bower_components dir` with the relative path to the bower install directory configured in your project's bower.json file (bower_components at the root of your site by default).
+    
+If you prefer using a public CDN for jquery, you could replace the first line by :
+
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+
+### After including the files in your HTML markup
 
 When the neccesary files have been included, it's very simple to set up TimeCircles on your page, simply target the element you wish to use with jQuery, and execute the TimeCircles function on it. This will create TimeCircles inside the targeted element, counting up from 0 (when the page was opened).
 
