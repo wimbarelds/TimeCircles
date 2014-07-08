@@ -26,13 +26,13 @@ Once bower is installed, in a cli shell at the root of your project, type the fo
 
     bower install timecircles --save
 
-And then, in your html files, include the following in your \<head\> section :    
+And then, in your html files, include the following in your `<head>` section :    
 
     <script type="text/javascript" src="bower_components dir\jquery\dist\jquery.min.js""></script>
     <script type="text/javascript" src="bower_components dir\timecircles\inc\TimeCircles.js"></script>
     <link href="bower_components dir\timecircles\inc\TimeCircles.css" rel="stylesheet">
     
-Replace 'bower_components dir' with the relative path to the bower install directory configured in your project's bower.json file (bower_components at the root of your site by default).
+Replace `bower_components dir` with the relative path to the bower install directory configured in your project's bower.json file (bower_components at the root of your site by default).
 
 ### After including the files in your HTML markup
 
