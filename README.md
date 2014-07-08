@@ -32,11 +32,11 @@ And then, in your html files, include the following in your `<head>` section :
     <script type="text/javascript" src="bower_components dir\timecircles\inc\TimeCircles.js"></script>
     <link href="bower_components dir\timecircles\inc\TimeCircles.css" rel="stylesheet">
     
+Replace `bower_components dir` with the relative path to the bower install directory configured in your project's bower.json file (bower_components at the root of your site by default).
+    
 If you prefer using a public CDN for jquery, you could replace the first line by :
 
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
-    
-Replace `bower_components dir` with the relative path to the bower install directory configured in your project's bower.json file (bower_components at the root of your site by default).
 
 ### After including the files in your HTML markup
 
