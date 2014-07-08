@@ -277,6 +277,7 @@
             paused: false,
             last_frame: 0,
             animation_frame: null,
+            interval_fallback: null,
             timer: false,
             total_duration: null,
             prev_time: null,
@@ -417,9 +418,22 @@
         if (!this.config.start) {
             this.data.paused = true;
         }
+        
+        // Set up interval fallback
+        var _this = this
+        this.data.interval_fallback = useWindow.setInterval(function(){
+            _this.update.call(_this, true);
+        }, 1000);
     };
 
-    TC_Instance.prototype.update = function() {
+    TC_Instance.prototype.update = function(nodraw) {
+        if(typeof nodraw === "undefined") {
+            nodraw = false;
+        }
+        else if(nodraw && this.data.paused) {
+            return;
+        }
+        
         if(limited_mode) {
             //Per unit clearing doesn't work in IE8 using explorer canvas, so do it in one time. The downside is that radial fade cant be used
             this.data.attributes.context.clearRect(0, 0, this.data.attributes.canvas[0].width, this.data.attributes.canvas[0].hright);
@@ -437,7 +451,6 @@
         if (!this.config.count_past_zero) {
             if (curDate > this.data.attributes.ref_date) {
                 for(var i = 0; i < this.data.drawn_units.length; i++) {
-                    // TODO: listeners!
                     var key = this.data.drawn_units[i];
 
                     // Set the text value
@@ -481,38 +494,40 @@
             if (Math.floor(visible_times.raw_time[key]) !== Math.floor(visible_times.raw_old_time[key])) {
                 this.notifyListeners(key, Math.floor(visible_times.time[key]), Math.floor(diff), "visible");
             }
+            
+            if(!nodraw) {
+                // Set the text value
+                this.data.text_elements[key].text(Math.floor(Math.abs(visible_times.time[key])));
 
-            // Set the text value
-            this.data.text_elements[key].text(Math.floor(Math.abs(visible_times.time[key])));
+                var x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+                var y = this.data.attributes.item_size / 2;
+                var color = this.config.time[key].color;
 
-            var x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
-            var y = this.data.attributes.item_size / 2;
-            var color = this.config.time[key].color;
-
-            if (this.config.animation === "smooth") {
-                if (lastKey !== null && !limited_mode) {
-                    if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
-                        this.radialFade(x, y, color, 1, key);
-                        this.data.state.fading[key] = true;
+                if (this.config.animation === "smooth") {
+                    if (lastKey !== null && !limited_mode) {
+                        if (Math.floor(visible_times.time[lastKey]) > Math.floor(visible_times.old_time[lastKey])) {
+                            this.radialFade(x, y, color, 1, key);
+                            this.data.state.fading[key] = true;
+                        }
+                        else if (Math.floor(visible_times.time[lastKey]) < Math.floor(visible_times.old_time[lastKey])) {
+                            this.radialFade(x, y, color, 0, key);
+                            this.data.state.fading[key] = true;
+                        }
                     }
-                    else if (Math.floor(visible_times.time[lastKey]) < Math.floor(visible_times.old_time[lastKey])) {
-                        this.radialFade(x, y, color, 0, key);
-                        this.data.state.fading[key] = true;
+                    if (!this.data.state.fading[key]) {
+                        this.drawArc(x, y, color, visible_times.pct[key]);
                     }
                 }
-                if (!this.data.state.fading[key]) {
-                    this.drawArc(x, y, color, visible_times.pct[key]);
+                else {
+                    this.animateArc(x, y, color, visible_times.pct[key], visible_times.old_pct[key], (new Date()).getTime() + tick_duration);
                 }
-            }
-            else {
-                this.animateArc(x, y, color, visible_times.pct[key], visible_times.old_pct[key], (new Date()).getTime() + tick_duration);
             }
             lastKey = key;
             j++;
         }
 
         // Dont request another update if we should be paused
-        if(this.data.paused) {
+        if(this.data.paused || nodraw) {
             return;
         }
         
@@ -717,6 +732,9 @@
     TC_Instance.prototype.destroy = function() {
         this.clearListeners();
         this.stop();
+        useWindow.clearInterval(this.data.interval_fallback);
+        this.data.interval_fallback = null;
+        
         this.container.remove();
         $(this.element).removeAttr('data-tc-id');
         $(this.element).removeData('tc-id');
