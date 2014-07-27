@@ -13,9 +13,8 @@
  * Each function called upon the public class will be forwarded to each instance
  * of the private classes within the relevant element collection
  **/
+ // TimeCircles uses AMD or browser globals to create a jQuery plugin.
 (function (factory) {
-	// Uses AMD or browser globals to create a jQuery plugin.
-
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define(['jquery'], factory);
