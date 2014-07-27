@@ -62,7 +62,7 @@
     // Used to disable some features on IE8
     var limited_mode = false;
     var tick_duration = 200; // in ms
-
+    
     var debug = (location.hash === "#debug");
     function debug_log(msg) {
         if (debug) {
@@ -136,8 +136,7 @@
      * @param {Mixed} mixed
      * @returns {Number}
      */
-    if (!Array.prototype.indexOf)
-    {
+    if (!Array.prototype.indexOf) {
         Array.prototype.indexOf = function(elt /*, from*/)
         {
             var len = this.length >>> 0;
@@ -234,40 +233,41 @@
     }
 
     var TC_Instance_List = {};
-    function updateInstanceList() {
+    function updateUsedWindow() {
         if(typeof useWindow.TC_Instance_List !== "undefined") {
             TC_Instance_List = useWindow.TC_Instance_List;
         }
         else {
             useWindow.TC_Instance_List = TC_Instance_List;
         }
+        initializeAnimationFrameHandler(useWindow);
     };
-
-    (function() {
+    
+    function initializeAnimationFrameHandler(w) {
         var vendors = ['webkit', 'moz'];
-        for (var x = 0; x < vendors.length && !window.top.requestAnimationFrame; ++x) {
-            window.top.requestAnimationFrame = window.top[vendors[x] + 'RequestAnimationFrame'];
-            window.top.cancelAnimationFrame = window.top[vendors[x] + 'CancelAnimationFrame'];
+        for (var x = 0; x < vendors.length && !w.requestAnimationFrame; ++x) {
+            w.requestAnimationFrame = w[vendors[x] + 'RequestAnimationFrame'];
+            w.cancelAnimationFrame = w[vendors[x] + 'CancelAnimationFrame'];
         }
 
-        if (!window.top.requestAnimationFrame || !window.top.cancelAnimationFrame) {
-            window.top.requestAnimationFrame = function(callback, element, instance) {
+        if (!w.requestAnimationFrame || !w.cancelAnimationFrame) {
+            w.requestAnimationFrame = function(callback, element, instance) {
                 if (typeof instance === "undefined")
                     instance = {data: {last_frame: 0}};
                 var currTime = new Date().getTime();
                 var timeToCall = Math.max(0, 16 - (currTime - instance.data.last_frame));
-                var id = window.top.setTimeout(function() {
+                var id = w.setTimeout(function() {
                     callback(currTime + timeToCall);
                 }, timeToCall);
                 instance.data.last_frame = currTime + timeToCall;
                 return id;
             };
-            window.top.cancelAnimationFrame = function(id) {
+            w.cancelAnimationFrame = function(id) {
                 clearTimeout(id);
             };
         }
-    })();
-
+    };
+    
 
     var TC_Instance = function(element, options) {
         this.element = element;
@@ -420,10 +420,10 @@
         }
         
         // Set up interval fallback
-        var _this = this
+        var _this = this;
         this.data.interval_fallback = useWindow.setInterval(function(){
             _this.update.call(_this, true);
-        }, 1000);
+        }, 100);
     };
 
     TC_Instance.prototype.update = function(nodraw) {
@@ -668,6 +668,9 @@
     };
 
     TC_Instance.prototype.timeLeft = function() {
+        if (this.data.paused && typeof this.data.timer === "number") {
+            return this.data.timer;
+        }
         var now = new Date();
         return ((this.data.attributes.ref_date - now) / 1000);
     };
@@ -750,8 +753,11 @@
         // Use window.top if use_top_frame is true
         if(this.config.use_top_frame) {
             useWindow = window.top;
-            updateInstanceList();
         }
+        else {
+            useWindow = window;
+        }
+        updateUsedWindow();
         
         this.data.total_duration = this.config.total_duration;
         if (typeof this.data.total_duration === "string") {
