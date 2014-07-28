@@ -12,24 +12,25 @@ The following instructions apply only to requirejs and have not be tested with a
 		}
 	}
 
+Replace `timecircles install dir` with the relative path to the TimeCircles' directory in your project.
+	
 ## Use TimeCircles as a dependency
 
 At the beginning of your module, insert `timecircles` in your dependencies array :
 
-	define(['require', 'jquery', 'timecircles'
-			], 
+	define(['require', 'jquery', 'timecircles'], 
 
 	function(require, $, TimeCircles) {
 		
 		...
 		
-		var tc = new TimeCircles(options);
+		var tc = new TimeCircles(('`jquery selector`'), options);
 		
 		OR
 		
 		var tc = ('`jquery selector`').TimeCircles(options);
 		
-		...
+		// Use the tc variable as usual ...
 	});
 
 ## CSS injection
@@ -42,19 +43,17 @@ This allows you to inject the TimeCircles CSS only when the module using the lib
 
 For this, you first need to activate the CSS loader in your project. Use the instructions listed there: https://github.com/guybedford/require-css#installation-and-setup.
 
-When you are done enabling the CSS loader, inject a `css!`timecircles install dir`/inc/TimeCircles` dependency in your module's configuration :
+When you are done enabling the CSS loader, inject a `css!timecircles install dir/inc/TimeCircles` dependency in your module's configuration :
 
-	define(['require', 'jquery', 'timecircles', `css!../bower_dependencies/timecircles/inc/TimeCircles`
-			], 
-	function(require, $, TimeCircles, TimeCirclesCSS) {
-		// TimeCirclesCSS is just an undefined reference here
-	});
+	define(['require', 'jquery', 'timecircles', `css!timecircles install dir/inc/TimeCircles`]
+
+Finally, replace `timecircles install dir` with the relative path to the TimeCircles directory in your project.
 	
 The CSS is the automatically loaded and you don't have to handle it in the `<head>` section of your html files. It will be all done for you !
 
 ### Using a shim config
 
-If you can't use a CSS loader, you can use a shim init callback in your requirejs config :
+If you can't use a CSS loader, you can use a shim init callback in your requirejs config. Although, this technique only works if your html files are all at the same depth in your project's structure.
 
 	requirejs.config({
 		shim : {
@@ -65,6 +64,5 @@ If you can't use a CSS loader, you can use a shim init callback in your requirej
 			},
 		}
 	});
-	
-This technique only works if your html files are all at the same depth in your project's structure.
+
 In the example above, all the HTML files have to be in a subdirectory of the parent of bower_dependencies.
