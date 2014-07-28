@@ -13,7 +13,7 @@
  * Each function called upon the public class will be forwarded to each instance
  * of the private classes within the relevant element collection
  **/
- (function (factory) {
+(function (factory) {
 	// Using AMD or browser globals to create the jQuery plugin.
 	// https://github.com/umdjs/umd/blob/master/jqueryPlugin.js
 	
