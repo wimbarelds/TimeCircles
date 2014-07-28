@@ -22,15 +22,10 @@ At the beginning of your module, insert `timecircles` in your dependencies array
 
 	function(require, $, TimeCircles) {
 		
-		...
+		var tc = $('.timer').TimeCircles(options);
+		// OR
+		var tc = new TimeCircles(('.timer'), options);
 		
-		var tc = new TimeCircles(('jquery selector'), options);
-		
-		OR
-		
-		var tc = $('jquery selector').TimeCircles(options);
-		
-		...
 		// Use the tc variable as usual ...
 	});
 
