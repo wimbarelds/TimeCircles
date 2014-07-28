@@ -30,6 +30,7 @@ At the beginning of your module, insert `timecircles` in your dependencies array
 		
 		var tc = ('`jquery selector`').TimeCircles(options);
 		
+		...
 		// Use the tc variable as usual ...
 	});
 
@@ -50,6 +51,8 @@ When you are done enabling the CSS loader, inject a `css!timecircles install dir
 
 Finally, replace `timecircles install dir` with the path to the TimeCircles directory in your project.
 	
+The CSS is the automatically loaded and you don't have to handle it in the `<head>` section of your html files. It will be all done for you !
+
 ### Using a shim config
 
 If you can't use a CSS loader, you can use a shim init callback in your requirejs config. It should be noted that, as a side effect, this technique only works if your html files are all at the same depth in your project's structure.
@@ -63,5 +66,5 @@ If you can't use a CSS loader, you can use a shim init callback in your requirej
 			},
 		}
 	});
-
+	
 In the example above, all the HTML files have to be in a subdirectory of the parent of bower_dependencies.
