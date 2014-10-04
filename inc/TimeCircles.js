@@ -1,13 +1,13 @@
 /**
  * Basic structure: TC_Class is the public class that is returned upon being called
- * 
+ *
  * So, if you do
  *      var tc = $(".timer").TimeCircles();
- *      
+ *
  * tc will contain an instance of the public TimeCircles class. It is important to
  * note that TimeCircles is not chained in the conventional way, check the
  * documentation for more info on how TimeCircles can be chained.
- * 
+ *
  * After being called/created, the public TimerCircles class will then- for each element
  * within it's collection, either fetch or create an instance of the private class.
  * Each function called upon the public class will be forwarded to each instance
@@ -16,7 +16,7 @@
 (function($) {
 
     var useWindow = window;
-    
+
     // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
     if (!Object.keys) {
         Object.keys = (function() {
@@ -58,11 +58,11 @@
             };
         }());
     }
-    
+
     // Used to disable some features on IE8
     var limited_mode = false;
     var tick_duration = 200; // in ms
-    
+
     var debug = (location.hash === "#debug");
     function debug_log(msg) {
         if (debug) {
@@ -106,7 +106,7 @@
             b: parseInt(result[3], 16)
         } : null;
     }
-    
+
     function isCanvasSupported() {
         var elem = document.createElement('canvas');
         return !!(elem.getContext && elem.getContext('2d'));
@@ -186,9 +186,13 @@
         var old_time = {};
 
         var greater_unit = null;
+        var unit;
+        var maxUnits;
+        var curUnits;
+        var oldUnits;
+
         for(var i = 0; i < units.length; i++) {
-            var unit = units[i];
-            var maxUnits;
+            unit = units[i];
 
             if (greater_unit === null) {
                 maxUnits = total_duration / secondsIn[unit];
@@ -197,16 +201,16 @@
                 maxUnits = secondsIn[greater_unit] / secondsIn[unit];
             }
 
-            var curUnits = (diff / secondsIn[unit]);
-            var oldUnits = (old_diff / secondsIn[unit]);
-            
+            curUnits = (diff / secondsIn[unit]);
+            oldUnits = (old_diff / secondsIn[unit]);
+
             if(floor) {
                 if(curUnits > 0) curUnits = Math.floor(curUnits);
                 else curUnits = Math.ceil(curUnits);
                 if(oldUnits > 0) oldUnits = Math.floor(oldUnits);
                 else oldUnits = Math.ceil(oldUnits);
             }
-            
+
             if (unit !== "Days") {
                 curUnits = curUnits % maxUnits;
                 oldUnits = oldUnits % maxUnits;
@@ -242,7 +246,7 @@
         }
         initializeAnimationFrameHandler(useWindow);
     };
-    
+
     function initializeAnimationFrameHandler(w) {
         var vendors = ['webkit', 'moz'];
         for (var x = 0; x < vendors.length && !w.requestAnimationFrame; ++x) {
@@ -267,7 +271,7 @@
             };
         }
     };
-    
+
 
     var TC_Instance = function(element, options) {
         this.element = element;
@@ -314,7 +318,7 @@
     TC_Instance.prototype.clearListeners = function() {
         this.listeners = { all: [], visible: [] };
     };
-    
+
     TC_Instance.prototype.addTime = function(seconds_to_add) {
         if(this.data.attributes.ref_date instanceof Date) {
             var d = this.data.attributes.ref_date;
@@ -324,12 +328,13 @@
             this.data.attributes.ref_date += (seconds_to_add * 1000);
         }
     };
-    
+
     TC_Instance.prototype.initialize = function(clear_listeners) {
         // Initialize drawn units
         this.data.drawn_units = [];
+        var unit;
         for(var i = 0; i < Object.keys(this.config.time).length; i++) {
-            var unit = Object.keys(this.config.time)[i];
+            unit = Object.keys(this.config.time)[i];
             if (this.config.time[unit].show) {
                 this.data.drawn_units.push(unit);
             }
@@ -346,7 +351,7 @@
         this.container = $("<div>");
         this.container.addClass('time_circles');
         this.container.appendTo(this.element);
-        
+
         // Determine the needed width and height of TimeCircles
         var height = this.element.offsetHeight;
         var width = this.element.offsetWidth;
@@ -359,16 +364,16 @@
             height = width / this.data.drawn_units.length;
         else if (width === 0 && height > 0)
             width = height * this.data.drawn_units.length;
-        
+
         // Create our canvas and set it to the appropriate size
         var canvasElement = document.createElement('canvas');
         canvasElement.width = width;
         canvasElement.height = height;
-        
+
         // Add canvas elements
         this.data.attributes.canvas = $(canvasElement);
         this.data.attributes.canvas.appendTo(this.container);
-        
+
         // Check if the browser has browser support
         var canvasSupported = isCanvasSupported();
         // If the browser doesn't have browser support, check if explorer canvas is loaded
@@ -418,7 +423,7 @@
         if (!this.config.start) {
             this.data.paused = true;
         }
-        
+
         // Set up interval fallback
         var _this = this;
         this.data.interval_fallback = useWindow.setInterval(function(){
@@ -433,7 +438,7 @@
         else if(nodraw && this.data.paused) {
             return;
         }
-        
+
         if(limited_mode) {
             //Per unit clearing doesn't work in IE8 using explorer canvas, so do it in one time. The downside is that radial fade cant be used
             this.data.attributes.context.clearRect(0, 0, this.data.attributes.canvas[0].width, this.data.attributes.canvas[0].hright);
@@ -450,14 +455,18 @@
         // If not counting past zero, and time < 0, then simply draw the zero point once, and call stop
         if (!this.config.count_past_zero) {
             if (curDate > this.data.attributes.ref_date) {
+              var key;
+              var x;
+              var y;
+              var color;
                 for(var i = 0; i < this.data.drawn_units.length; i++) {
-                    var key = this.data.drawn_units[i];
+                    key = this.data.drawn_units[i];
 
                     // Set the text value
                     this.data.text_elements[key].text("0");
-                    var x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
-                    var y = this.data.attributes.item_size / 2;
-                    var color = this.config.time[key].color;
+                    x = (i * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+                    y = this.data.attributes.item_size / 2;
+                    color = this.config.time[key].color;
                     this.drawArc(x, y, color, 0);
                 }
                 this.stop();
@@ -494,7 +503,7 @@
             if (Math.floor(visible_times.raw_time[key]) !== Math.floor(visible_times.raw_old_time[key])) {
                 this.notifyListeners(key, Math.floor(visible_times.time[key]), Math.floor(diff), "visible");
             }
-            
+
             if(!nodraw) {
                 // Set the text value
                 this.data.text_elements[key].text(Math.floor(Math.abs(visible_times.time[key])));
@@ -530,7 +539,7 @@
         if(this.data.paused || nodraw) {
             return;
         }
-        
+
         // We need this for our next frame either way
         var _this = this;
         var update = function() {
@@ -599,7 +608,7 @@
                     clear_radius * 2
                     );
         }
-        
+
         if (this.config.use_background) {
             this.data.attributes.context.beginPath();
             this.data.attributes.context.arc(x, y, this.data.attributes.radius, 0, 2 * Math.PI, false);
@@ -679,11 +688,16 @@
         useWindow.cancelAnimationFrame(this.data.animation_frame);
         useWindow.clearTimeout(this.data.animation_frame)
 
+        //console.log("attr_data_date 2:" + attr_data_date);
         // Check if a date was passed in html attribute or jquery data
         var attr_data_date = $(this.element).data('date');
+        //console.log("attr_data_date 1:" + attr_data_date);
+
         if (typeof attr_data_date === "undefined") {
             attr_data_date = $(this.element).attr('data-date');
         }
+        //console.log("attr_data_date 2:" + attr_data_date);
+
         if (typeof attr_data_date === "string") {
             this.data.attributes.ref_date = parse_date(attr_data_date);
         }
@@ -695,10 +709,13 @@
         }
         else {
             // Try to get data-timer
+            //console.log("attr_data_date 3:" + attr_data_date);
             var attr_data_timer = $(this.element).data('timer');
+            //console.log("attr_data_date 4:" + attr_data_date);
             if (typeof attr_data_timer === "undefined") {
                 attr_data_timer = $(this.element).attr('data-timer');
             }
+            //console.log("attr_data_date 5:" + attr_data_date);
             if (typeof attr_data_timer === "string") {
                 attr_data_timer = parseFloat(attr_data_timer);
             }
@@ -710,6 +727,7 @@
                 // data-timer and data-date were both not set
                 // use config date
                 this.data.attributes.ref_date = this.config.ref_date;
+
             }
         }
 
@@ -721,6 +739,14 @@
     TC_Instance.prototype.restart = function() {
         this.data.timer = false;
         this.start();
+    };
+
+
+// starts from current time - instance
+    TC_Instance.prototype.reset = function() {
+        var now = new Date();
+        this.config.ref_date = now;
+        this.data.attributes.ref_date = this.config.ref_date;
     };
 
     TC_Instance.prototype.stop = function() {
@@ -737,10 +763,12 @@
         this.stop();
         useWindow.clearInterval(this.data.interval_fallback);
         this.data.interval_fallback = null;
-        
+
         this.container.remove();
+
         $(this.element).removeAttr('data-tc-id');
         $(this.element).removeData('tc-id');
+
     };
 
     TC_Instance.prototype.setOptions = function(options) {
@@ -758,7 +786,7 @@
             useWindow = window;
         }
         updateUsedWindow();
-        
+
         this.data.total_duration = this.config.total_duration;
         if (typeof this.data.total_duration === "string") {
             if (typeof secondsIn[this.data.total_duration] !== "undefined") {
@@ -767,8 +795,9 @@
             }
             else if (this.data.total_duration === "Auto") {
                 // If set to auto, total_duration is the size of 1 unit, of the unit type bigger than the largest shown
+                var unit;
                 for(var i = 0; i < Object.keys(this.config.time).length; i++) {
-                    var unit = Object.keys(this.config.time)[i];
+                    unit = Object.keys(this.config.time)[i];
                     if (this.config.time[unit].show) {
                         this.data.total_duration = secondsIn[nextUnits[unit]];
                         break;
@@ -877,7 +906,7 @@
             instance.addTime(seconds_to_add);
         });
     };
-    
+
     TC_Class.prototype.foreach = function(callback) {
         var _this = this;
         this.elements.each(function() {
@@ -906,6 +935,14 @@
     TC_Class.prototype.restart = function() {
         this.foreach(function(instance) {
             instance.restart();
+        });
+        return this;
+    };
+
+    // starts from current time
+    TC_Class.prototype.reset = function() {
+        this.foreach(function(instance) {
+            instance.reset();
         });
         return this;
     };
