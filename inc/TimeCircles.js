@@ -394,24 +394,27 @@
 
         // Prepare Time Elements
         var i = 0;
+        var textElement;
+        var headerElement;
+        var numberElement;
         for (var key in this.data.text_elements) {
             if (!this.config.time[key].show)
                 continue;
 
-            var textElement = $("<div>");
+            textElement = $("<div>");
             textElement.addClass('textDiv_' + key);
             textElement.css("top", Math.round(0.35 * this.data.attributes.item_size));
             textElement.css("left", Math.round(i++ * this.data.attributes.item_size));
             textElement.css("width", this.data.attributes.item_size);
             textElement.appendTo(this.container);
 
-            var headerElement = $("<h4>");
+            headerElement = $("<h4>");
             headerElement.text(this.config.time[key].text); // Options
             headerElement.css("font-size", Math.round(this.config.text_size * this.data.attributes.item_size));
             headerElement.css("line-height", Math.round(this.config.text_size * this.data.attributes.item_size) + "px");
             headerElement.appendTo(textElement);
 
-            var numberElement = $("<span>");
+            numberElement = $("<span>");
             numberElement.css("font-size", Math.round(3 * this.config.text_size * this.data.attributes.item_size));
             numberElement.css("line-height", Math.round(this.config.text_size * this.data.attributes.item_size) + "px");
             numberElement.appendTo(textElement);
@@ -488,8 +491,12 @@
         var lastKey = null;
 
         var cur_shown = this.data.drawn_units.slice();
+        var key;
+        var x;
+        var y;
+        var color;
         for (var i in allUnits) {
-            var key = allUnits[i];
+            key = allUnits[i];
 
             // Notify (all) listeners
             if (Math.floor(all_times.raw_time[key]) !== Math.floor(all_times.raw_old_time[key])) {
@@ -508,9 +515,9 @@
                 // Set the text value
                 this.data.text_elements[key].text(Math.floor(Math.abs(visible_times.time[key])));
 
-                var x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
-                var y = this.data.attributes.item_size / 2;
-                var color = this.config.time[key].color;
+                x = (j * this.data.attributes.item_size) + (this.data.attributes.item_size / 2);
+                y = this.data.attributes.item_size / 2;
+                color = this.config.time[key].color;
 
                 if (this.config.animation === "smooth") {
                     if (lastKey !== null && !limited_mode) {
@@ -653,16 +660,21 @@
 
     TC_Instance.prototype.radialFade = function(x, y, color, from, key) {
         // TODO: Make fade_time option
+        // TODO: check if this function is in use
         var rgb = hexToRgb(color);
         var _this = this; // We have a few inner scopes here that will need access to our instance
 
         var step = 0.2 * ((from === 1) ? -1 : 1);
         var i;
+        var delay;
+        var rgba;
         for (i = 0; from <= 1 && from >= 0; i++) {
             // Create inner scope so our variables are not changed by the time the Timeout triggers
             (function() {
-                var delay = 50 * i;
-                var rgba = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + (Math.round(from * 10) / 10) + ")";
+                //TODO: check if there is a memory leak here
+                console.log('TODO: check if there is a memory leak here');
+                delay = 50 * i;
+                rgba = "rgba(" + rgb.r + ", " + rgb.g + ", " + rgb.b + ", " + (Math.round(from * 10) / 10) + ")";
                 useWindow.setTimeout(function() {
                     _this.drawArc(x, y, rgba, 1);
                 }, delay);
@@ -821,8 +833,9 @@
     };
 
     TC_Instance.prototype.notifyListeners = function(unit, value, total, type) {
+        var listener;
         for (var i = 0; i < this.listeners[type].length; i++) {
-            var listener = this.listeners[type][i];
+            listener = this.listeners[type][i];
             listener.func.apply(listener.scope, [unit, value, total]);
         }
     };
@@ -910,6 +923,7 @@
     TC_Class.prototype.foreach = function(callback) {
         var _this = this;
         this.elements.each(function() {
+            console.log("TODO: check if there memory leak here N2");
             var instance = _this.getInstance(this);
             if (typeof callback === "function") {
                 callback(instance);
