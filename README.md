@@ -176,12 +176,20 @@ The most powerful interactions with TimeCircles can be achieved using listeners.
 
 The `type` parameter allows you to listen to either only the events from the visible TimeCircles, or all TimeCircles. Correct values are "visible" or "all". The default value is "visible", but through using "all" you can listen to the circles you're hiding (if you're hiding any of course).
 
-To add a listener, use the `addEventListener(callback, type)` function. Callback is a function you pass to the event listener. The callback will then be triggered for each event. Three parameters are passed to your callback function, namely:
+To add a listener, use the `addListener(callback, type)` function. Callback is a function you pass to the event listener. The callback will then be triggered for each event. Three parameters are passed to your callback function, namely:
 
 * **unit:** The time unit in string format. So, "Days"/"Hours"/"Minutes"/"Seconds".
 * **value:** The new value of the time unit that changed. I.e.: 15.
 * **total:** This is the total time left (or elapsed) since the zero point.
-
+```
+$(".example").TimeCircles({count_past_zero: false}).addListener(countdownComplete);
+	
+function countdownComplete(unit, value, total){
+	if(total<=0){
+		$(this).fadeOut('slow').replaceWith("<h2>Time's Up!</h2>");
+	}
+}
+```
 ### end()
 
 To allow you to chain TimeCircles to other jQuery functions, you can use the end() function. The end function returns the jQuery object and allows you to trigger jQuery functions as desired.
