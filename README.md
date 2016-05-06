@@ -81,9 +81,15 @@ This option sets the width of the backgroundground circle. The width of the back
 
 ### text_size `(default: 0.07)`
 
-This option sets the font size of the text in the circles. The size is set relative to the size of the circle as a whole. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring.
+This option sets the font size of the text (Days/Hours/Minutes/etc.) in the circles. The size is set relative to the size of the circle as a whole. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring.
 
-    $(".example").TimeCircles({text_size: 0.1}); 
+    $(".example").TimeCircles({text_size: 0.1});
+
+### number_size `(default: 0.28)`
+
+This option sets the font size of the numbers in the circles. The size is set relative to the size of the circle as a whole. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring.
+
+    $(".example").TimeCircles({number_size: 0.25});
 
 ### total_duration `(default: "Auto")`
 
