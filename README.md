@@ -7,21 +7,21 @@ This documentation will provide some examples of how to use TimeCircles. Usage o
 
 ## General use
 
-The first thing to do is to include the javascript files for jQuery and TimeCircles, as well as the TimeCircles stylesheet. These should ideally be included in the head of your html file.
+The first thing to do is to include the JavaScript files for jQuery and TimeCircles, as well as the TimeCircles stylesheet. These should ideally be included in the head of your html file.
 
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
     <script type="text/javascript" src="TimeCircles.js"></script>
     <link href="TimeCircles.css" rel="stylesheet">
 
-When the neccesary files have been included, it's very simple to set up TimeCircles on your page, simply target the element you wish to use with jQuery, and execute the TimeCircles function on it. This will create TimeCircles inside the targeted element, counting up from 0 (when the page was opened).
+When the necessary files have been included, it's very simple to set up TimeCircles on your page, simply target the element you wish to use with jQuery, and execute the TimeCircles function on it. This will create TimeCircles inside the targeted element, counting up from 0 (when the page was opened).
 
-> **Important note:** TimeCircles will automatically make it self the size of whatever element you place it in. If you do not have a height set, it will attempt to determine a height based on the element's width. For the best results however, it's recommended to set both the width and height.
+> **Important note:** TimeCircles will automatically make its self the size of whatever element you place it in. If you do not have a height set, it will attempt to determine a height based on the element's width. For the best results however, it's recommended to set both the width and height.
 
 ### Setting your reference time
 
 Of course, you might not want to start counting up from 0. Perhaps you're counting down the time until a wedding, or alternatively counting how long you've been with your girlfriend (or whatever else really). Really, TimeCircles is most useful if you're using it with some reference time and/or date.
 
-Setting up your reference date and time is also fairly simple. The best way to do it is to simply include it in the html element you've set aside for TimeCircles. Create an attribute called data-date and provide a value in the format of `yyyy-mm-dd hh:mm:ss`
+Setting up your reference date and time is also fairly simple. The best way to do it is to simply include it in the html element you've set aside for TimeCircles. Create an attribute called `data-date` and provide a value in the format of `yyyy-mm-dd hh:mm:ss`
 
     <div class="example" data-date="2014-01-01 00:00:00"></div>
 
@@ -39,7 +39,7 @@ To customize TimeCircles to fit precisely what you're looking for you can use th
 
 ### start `(default: true)`
 
-This option determines whether or not TimeCircles should start immediately. If for example you wish to create a stopwatch that starts when the users clicks a button, you'll want to set this to false.
+This option determines whether or not TimeCircles should start immediately. If for example you wish to create a stopwatch that starts when the user clicks a button, you'll want to set this to false.
 
     $(".example").TimeCircles({start: false}); 
 
@@ -75,7 +75,7 @@ This option sets the width of the foreground circle. The width is set relative t
 
 ### bg_width `(default: 1.2)`
 
-This option sets the width of the backgroundground circle. The width of the background is set relative to the width of the foreground. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring. Higher and you get wider, lower you get thinner.
+This option sets the width of the background circle. The width of the background circle is set relative to the width of the foreground circle. A value of 1 means 100%, so a value of 1 would mean having a width equal to your foreground ring. Higher and you get wider, lower you get thinner.
 
     $(".example").TimeCircles({bg_width: 0.5}); 
 
@@ -128,7 +128,7 @@ The time option is actually a group of options that allows you to control the op
 
 ## Functions
 
-Functions will allow you to interact with your TimeCircles as they're running. Generally speaking, this functionality is most often used by other developers who want their own javascript to interact with TimeCircles. However, if you're not a developer yourself, there are still a few functions that are quite simple to use and shouldn't be too hard to tackle.
+Functions will allow you to interact with your TimeCircles as they're running. Generally speaking, this functionality is most often used by other developers who want their own JavaScript to interact with TimeCircles. However, if you're not a developer yourself, there are still a few functions that are quite simple to use and shouldn't be too hard to tackle.
 
 Before we go into what each function does however, it should be pointed out how these functions can be used. Unlike quite a lot of other jQuery plugins, TimeCircles does not return a jQuery object after instantiating. Instead, it returns a TimeCircles object. This means that function chaining will work slightly differently than it does for other jQuery plugins. To find out more about how to chain other jQuery plugins and functions, have a look at the `end()` function.
 
@@ -136,16 +136,16 @@ TimeCircles functions themselves (with the exception of the `end()` function) wi
 
 ### start() , stop() and restart()
 
-These are the most basic functions provided. They allow you to temporarily stop TimeCircles or restart it. Start will unpause the timer when it's stopped, restart will restart it from it's original value. If you're using TimeCircles to count down to a certain point in the future, upon unpausing the countdown will jump ahead.
+These are the most basic functions provided. They allow you to temporarily stop TimeCircles or restart it. Start will unpause the timer when it's stopped, restart will restart it from its original value. If you're using TimeCircles to count down to a certain point in the future, upon unpausing the countdown will jump ahead.
 
-**Html**
+**HTML**
 
     <div class="example stopwatch" data-timer="900"></div>
     <button class="btn btn-success start">Start</button>
     <button class="btn btn-danger stop">Stop</button>
     <button class="btn btn-info restart">Restart</button>
 
-**Javascript**
+**JavaScript**
 
     $(".example.stopwatch").TimeCircles();
     $(".start").click(function(){ $(".example.stopwatch").TimeCircles().start(); });
@@ -154,7 +154,7 @@ These are the most basic functions provided. They allow you to temporarily stop 
 
 ### destroy()
 
-If for some reason, you need to get rid of your TimeCircles, or you want to allow users remove them at the click of a button; you can do that with destroy.
+If for some reason, you need to get rid of your TimeCircles, or you want to allow users to remove them at the click of a button; you can do that with destroy.
 
     $(".example").TimeCircles().destroy();
 
@@ -166,15 +166,15 @@ Some options or variables are only initialized once, at the time of creating Tim
 
 ### getTime()
 
-Retrieves the number seconds left (or since) the zero point. Values until zero are positive, values after zero are negative.
+Retrieves the number of seconds left (or since) the zero point. Values until zero are positive, values after zero are negative.
 
     $(".example").TimeCircles().getTime();
 
 ### addListener `(callback, type = "visible")`
 
-The most powerful interactions with TimeCircles can be achieved using listeners. Using listeners, you can make a ticking sound play every second, or you can make a sound whenever a minute passes. You could even use it to trigger some alarm or whole other javascript when the timer hits zero.
+The most powerful interactions with TimeCircles can be achieved using listeners. Using listeners, you can make a ticking sound play every second, or you can make a sound whenever a minute passes. You could even use it to trigger some alarm or whole other JavaScript when the timer hits zero.
 
-The type parameter allows you to listen to either only the events from the visible TimeCircles, or all TimeCircles. Correct values are "visible" or "all". The default value is "visible", but through using "all" you can listen to the circles you're hiding (if you're hiding any of course).
+The `type` parameter allows you to listen to either only the events from the visible TimeCircles, or all TimeCircles. Correct values are "visible" or "all". The default value is "visible", but through using "all" you can listen to the circles you're hiding (if you're hiding any of course).
 
 To add a listener, use the `addEventListener(callback, type)` function. Callback is a function you pass to the event listener. The callback will then be triggered for each event. Three parameters are passed to your callback function, namely:
 
@@ -184,6 +184,6 @@ To add a listener, use the `addEventListener(callback, type)` function. Callback
 
 ### end()
 
-To allow you to chain TimeCircles to other jQuery functions, you can use the end() function. The end function returns the jQuery object and allows you to trigger jQuery function as desired.
+To allow you to chain TimeCircles to other jQuery functions, you can use the end() function. The end function returns the jQuery object and allows you to trigger jQuery functions as desired.
 
     $(".example").TimeCircles().end().fadeOut(); 
