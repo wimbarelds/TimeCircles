@@ -693,7 +693,13 @@
         // Check if a date was passed in html attribute or jquery data
         var attr_data_date = $(this.element).data('date');
         if (typeof attr_data_date === "undefined") {
-            attr_data_date = $(this.element).attr('data-date');
+            // datetime attribute is defined on HTML 5 element <time> for precisely this meaning
+            // is also valid on <ins> and <del>.
+            attr_data_date = $(this.element).attr('datetime');
+            // fallback for when data-date was used, but data() failed to obtain value.
+            if (typeof attr_data_date === "undefined") {
+                attr_data_date = $(this.element).attr('data-date');
+            }
         }
         if (typeof attr_data_date === "string") {
             this.data.attributes.ref_date = parse_date(attr_data_date);
