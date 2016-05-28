@@ -5,6 +5,10 @@ TimeCircles is a jQuery plugin that provides a nice looking way to either count 
 
 This documentation will provide some examples of how to use TimeCircles. Usage of TimeCircles can be very simple, but for those willing to work a little harder can also provide more sophisticated functionality. The examples aim to provide a good basic idea of how various features can be used without overcomplicating things.
 
+
+![Result Example](http://beta.rss-ems.com/download/TimeCircles-resultExample.gif)
+
+
 ## General use
 
 The first thing to do is to include the JavaScript files for jQuery and TimeCircles, as well as the TimeCircles stylesheet. These should ideally be included in the head of your html file.
