@@ -13,9 +13,20 @@
  * Each function called upon the public class will be forwarded to each instance
  * of the private classes within the relevant element collection
  **/
-(function($) {
+(function (factory) {
+	// Using AMD or browser globals to create the jQuery plugin.
+	// https://github.com/umdjs/umd/blob/master/jqueryPlugin.js
+	
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module.
+        define(['jquery'], factory);
+    } else {
+        // Browser globals
+        factory(jQuery);
+    }
+}(function ($) {
 
-    var useWindow = window;
+	var useWindow = window;
     
     // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
     if (!Object.keys) {
@@ -957,4 +968,6 @@
     $.fn.TimeCircles = function(options) {
         return new TC_Class(this, options);
     };
-}(jQuery));
+	
+	return TC_Class;
+}));
