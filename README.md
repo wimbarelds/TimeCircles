@@ -67,6 +67,18 @@ This options sets whether any background circle should be drawn at all. Disablin
 
     $(".example").TimeCircles({use_background: false}); 
 
+### innner_circle_bg_color `(default: "#60686F")`
+
+This option determines the color of the background circle.
+
+    $(".example").TimeCircles({innner_circle_bg_color: "#000000"}); 
+    
+### use_innner_background `(default: true)`
+
+This options sets whether any background circle should be drawn behind the clock at all. Disabling this option could be used in isolation, or you could use a background of your own to place behind TimeCircles.
+
+    $(".example").TimeCircles({use_innner_background: false}); 
+
 ### fg_width `(default: 0.1)`
 
 This option sets the width of the foreground circle. The width is set relative to the size of the circle as a whole. A value of 0.1 means 10%, so if your TimeCircles are 100 pixels high, the foreground circle will be 10 percent of that (10 pixels).

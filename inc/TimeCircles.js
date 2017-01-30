@@ -621,6 +621,18 @@
             this.data.attributes.context.stroke();
         }
 
+        if (this.config.use_inner_background) {
+            this.data.attributes.context.beginPath();
+            this.data.attributes.context.arc(x, y, this.data.attributes.radius, 0, 2 * Math.PI, false);
+            this.data.attributes.context.lineWidth = 1;
+            this.data.attributes.context.fillStyle = this.config.circle_inner_bg_color;
+            this.data.attributes.context.fill();
+            // line color
+            this.data.attributes.context.strokeStyle = this.config.circle_inner_bg_color;
+            this.data.attributes.context.stroke();
+        }
+
+
         // Direction
         var startAngle, endAngle, counterClockwise;
         var defaultOffset = (-0.5 * Math.PI);
@@ -816,6 +828,8 @@
         count_past_zero: true,
         circle_bg_color: "#60686F",
         use_background: true,
+        use_inner_background: true,
+        circle_inner_bg_color: "#60686F",
         fg_width: 0.1,
         bg_width: 1.2,
         text_size: 0.07,
