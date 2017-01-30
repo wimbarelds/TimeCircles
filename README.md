@@ -69,13 +69,13 @@ This options sets whether any background circle should be drawn at all. Disablin
 
 ### innner_circle_bg_color `(default: "#60686F")`
 
-This option determines the color of the inner background circle.
+This option determines the color of the background circle.
 
-    $(".example").TimeCircles({inner_circle_bg_color: "#000000"}); 
+    $(".example").TimeCircles({innner_circle_bg_color: "#000000"}); 
     
 ### use_innner_background `(default: true)`
 
-This options sets whether any inner background circle should be drawn at all. Disabling this option could be used in isolation, or you could use a background of your own to place behind TimeCircles.
+This options sets whether any background circle should be drawn behind the clock at all. Disabling this option could be used in isolation, or you could use a background of your own to place behind TimeCircles.
 
     $(".example").TimeCircles({use_innner_background: false}); 
 
