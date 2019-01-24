@@ -690,11 +690,13 @@
         useWindow.cancelAnimationFrame(this.data.animation_frame);
         useWindow.clearTimeout(this.data.animation_frame)
 
-        // Check if a date was passed in html attribute or jquery data
+       // Check if a date was passed or modified dynamically in html attribute or jquery data
         var attr_data_date = $(this.element).data('date');
-        if (typeof attr_data_date === "undefined") {
+        var updated_attr_data_date = $(this.element).attr('data-date');
+        if ((typeof attr_data_date === "undefined") || (attr_data_date !== updated_attr_data_date)) {
             attr_data_date = $(this.element).attr('data-date');
         }
+        
         if (typeof attr_data_date === "string") {
             this.data.attributes.ref_date = parse_date(attr_data_date);
         }
