@@ -21,22 +21,24 @@
  *	Titles (Days, Hours, etc)
  **/
 .time_circles > div > h4 {
-    margin: 0px;
-    padding: 0px;
+    margin: 0;
+    padding: 0;
     text-align: center;
     text-transform: uppercase;
     font-family: 'Century Gothic', Arial;
+    line-height: 1;
 }
 
 /**
  *	Time numbers, ie: 12
  **/
 .time_circles > div > span {
+    margin: 0;
+    padding: 0;
     display: block;
     width: 100%;
     text-align: center;
     font-family: 'Century Gothic', Arial;
-    font-size: 300%;
-    margin-top: 0.4em;
+    line-height: 1;
     font-weight: bold;
 }
